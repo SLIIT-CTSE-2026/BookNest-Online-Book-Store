@@ -1,15 +1,13 @@
-function App() {
-
+export default function App() {
   return (
     <>
-      <h1>Vite + React</h1>
-      <div>
-        <p>
-          Click on the Vite and React logos to learn more
-        </p>
-      </div>
+      <p className="text-2xl text-red-600 font-bold text-center mt-10">
+        Click on the Vite and React logos to learn more
+      </p>
+
+      <p className="text-2xl text-green-400 font-bold text-center mt-10">
+        Click on the Vite and React logos to learn more
+      </p>
     </>
   )
 }
-
-export default App
