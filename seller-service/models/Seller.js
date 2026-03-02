@@ -21,8 +21,8 @@ const sellerSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: 'customer',
-    enum: ['customer']
+    default: 'seller',
+    enum: ['seller']
   },
   createDate: {
     type: Date,

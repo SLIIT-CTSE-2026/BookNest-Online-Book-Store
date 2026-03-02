@@ -1,6 +1,5 @@
 import Seller from '../models/Seller.js';
 
-// Create seller profile (called by auth service)
 export const createSellerProfile = async (req, res) => {
   try {
     const { userId, name, email, role, createDate } = req.body;
@@ -32,7 +31,7 @@ export const createSellerProfile = async (req, res) => {
       createDate: createDate || new Date()
     };
 
-    const newSeller = new Seller(SellerData);
+    const newSeller = new Seller(sellerData);
     await newSeller.save();
 
     res.status(201).json({
