@@ -25,7 +25,8 @@ const customerSchema = new mongoose.Schema({
     default: 'customer',
     enum: ['customer']
   },
-  // Additional customer-specific fields
+
+  // customer-specific fields
   address: {
     type: String,
     trim: true
@@ -34,23 +35,6 @@ const customerSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  dateOfBirth: {
-    type: Date
-  },
-  preferences: {
-    favoriteGenres: [{
-      type: String
-    }],
-    notificationSettings: {
-      email: { type: Boolean, default: true },
-      sms: { type: Boolean, default: false }
-    }
-  },
-  orderHistory: [{
-    orderId: String,
-    orderDate: Date,
-    totalAmount: Number
-  }],
   createDate: {
     type: Date,
     default: Date.now
