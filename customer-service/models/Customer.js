@@ -1,20 +1,18 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
 
 const customerSchema = new mongoose.Schema({
-  customerId: {
+  userId: {
     type: String,
     required: true,
     unique: true,
-    default: function() {
-      return 'CUST' + Date.now() + Math.floor(Math.random() * 1000);
-    }
+    index: true
   },
-  customerName: {
+  name: {
     type: String,
-    required: [true, 'Name is required']
+    required: [true, 'Name is required'],
+    trim: true
   },
-  customerEmail: {
+  email: {
     type: String,
     required: [true, 'Email is required'],
     unique: true,
@@ -22,10 +20,37 @@ const customerSchema = new mongoose.Schema({
     trim: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email']
   },
-  customerPassword: {
+  role: {
     type: String,
-    required: [true, 'Password is required'],
+    default: 'customer',
+    enum: ['customer']
   },
+  // Additional customer-specific fields
+  address: {
+    type: String,
+    trim: true
+  },
+  phone: {
+    type: String,
+    trim: true
+  },
+  dateOfBirth: {
+    type: Date
+  },
+  preferences: {
+    favoriteGenres: [{
+      type: String
+    }],
+    notificationSettings: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: false }
+    }
+  },
+  orderHistory: [{
+    orderId: String,
+    orderDate: Date,
+    totalAmount: Number
+  }],
   createDate: {
     type: Date,
     default: Date.now
@@ -33,27 +58,6 @@ const customerSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-
-// Hash password before saving
-customerSchema.pre('save', async function(next) {
-  if (!this.isModified('customerPassword')) return next();
-  
-  try {
-    const saltRounds = 12;
-    this.customerPassword = await bcrypt.hash(this.customerPassword, saltRounds);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Compare password method
-customerSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.customerPassword);
-};
-
-customerSchema.index({ customerEmail: 1 });
-customerSchema.index({ customerId: 1 });
 
 const Customer = mongoose.model('Customer', customerSchema);
 export default Customer;
