@@ -1,80 +1,57 @@
 import Customer from '../models/Customer.js';
-import jwt from 'jsonwebtoken';
 
-// Create a new customer
-export const createCustomer = async (req, res) => {
+// Create customer profile (called by auth service)
+export const createCustomerProfile = async (req, res) => {
   try {
-    const { customerName, customerEmail, customerPassword } = req.body;
+    const { userId, name, email, role, createDate } = req.body;
 
     // Basic validation
-    if (!customerName || customerName.trim().length === 0) {
+    if (!userId || !name || !email) {
       return res.status(400).json({
         success: false,
-        message: 'Customer name is required'
+        message: 'userId, name, and email are required'
       });
     }
 
-    if (!customerEmail || customerEmail.trim().length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Customer email is required'
-      });
-    }
-
-    if (!customerPassword || customerPassword.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password is required and must be at least 6 characters'
-      });
-    }
-
-    // Sanitize data
-    const customerData = {
-      customerName: customerName.trim(),
-      customerEmail: customerEmail.trim().toLowerCase(),
-      customerPassword: customerPassword
-    };
-
-    // Check email already exists
-    const existingCustomer = await Customer.findOne({ customerEmail: customerData.customerEmail });
+    // Check if profile already exists
+    const existingCustomer = await Customer.findOne({ userId });
     if (existingCustomer) {
-      return res.status(409).json({
-        success: false,
-        message: 'Customer with this email already exists'
+      return res.status(200).json({
+        success: true,
+        message: 'Customer profile already exists',
+        data: { customer: existingCustomer }
       });
     }
+
+    // Create customer profile
+    const customerData = {
+      userId,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      role: role || 'customer',
+      createDate: createDate || new Date()
+    };
 
     const newCustomer = new Customer(customerData);
     await newCustomer.save();
 
-    // Remove password from response
-    const { customerPassword: _, ...customerResponse } = newCustomer.toObject();
-
     res.status(201).json({
       success: true,
-      message: 'Customer created successfully',
+      message: 'Customer profile created successfully',
       data: {
-        customer: customerResponse
+        customer: newCustomer
       }
     });
+
   } catch (error) {
-    console.error('Create customer error:', error);
+    console.error('Create customer profile error:', error);
     
-    // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
         errors: validationErrors
-      });
-    }
-
-    // Handle duplicate key error
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: 'Customer with this email already exists'
       });
     }
 
@@ -95,24 +72,22 @@ export const getAllCustomers = async (req, res) => {
     const filter = {};
     if (search) {
       filter.$or = [
-        { customerName: { $regex: search, $options: 'i' } },
-        { customerEmail: { $regex: search, $options: 'i' } },
-        { customerId: { $regex: search, $options: 'i' } }
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { userId: { $regex: search, $options: 'i' } }
       ];
     }
 
-    // Get all customers without pagination
-    const customers = await Customer.find(filter)
-      .sort({ createDate: -1 });
+    const customers = await Customer.find(filter).select('-__v').sort({ createDate: -1 });
 
     res.status(200).json({
       success: true,
       message: 'Customers retrieved successfully',
       data: {
-        customers
+        customers,
+        count: customers.length
       }
     });
-
   } catch (error) {
     console.error('Get customers error:', error);
     res.status(500).json({
@@ -127,8 +102,17 @@ export const getAllCustomers = async (req, res) => {
 export const getCustomerById = async (req, res) => {
   try {
     const { customerId } = req.params;
-    const customer = await Customer.findOne({ customerId });
+    
+    // Check if requesting user matches the customer ID or is authorized
+    if (req.user.role !== 'seller' && req.user.userId !== customerId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only view your own profile.'
+      });
+    }
 
+    const customer = await Customer.findOne({ userId: customerId }).select('-__v');
+    
     if (!customer) {
       return res.status(404).json({
         success: false,
@@ -143,9 +127,8 @@ export const getCustomerById = async (req, res) => {
         customer
       }
     });
-
   } catch (error) {
-    console.error('Get customer error:', error);
+    console.error('Get customer by ID error:', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -154,49 +137,38 @@ export const getCustomerById = async (req, res) => {
   }
 };
 
-// Update customer profile
+// Update customer
 export const updateCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
-    const { customerName, customerEmail, customerPassword } = req.body;
-    
-    // Basic validation
-    if (!customerName || customerName.trim().length === 0) {
-      return res.status(400).json({
+    const updateData = req.body;
+
+    // Check if requesting user matches the customer ID
+    if (req.user.userId !== customerId) {
+      return res.status(403).json({
         success: false,
-        message: 'Customer name is required'
+        message: 'Access denied. You can only update your own profile.'
       });
     }
 
-    if (!customerEmail || customerEmail.trim().length === 0) {
+    // Remove fields that shouldn't be updated here
+    delete updateData.userId;
+    delete updateData.email; // Email updates should go through auth service
+    delete updateData.role;
+
+    // Validate update data
+    if (updateData.phone && !/^[\+]?[1-9][\d]{0,15}$/.test(updateData.phone)) {
       return res.status(400).json({
         success: false,
-        message: 'Customer email is required'
+        message: 'Invalid phone number format'
       });
-    }
-
-    // Sanitize and prepare update data
-    const updateData = {
-      customerName: customerName.trim(),
-      customerEmail: customerEmail.trim().toLowerCase()
-    };
-
-    // If password is provided, validate and add to update data
-    if (customerPassword) {
-      if (customerPassword.length < 6) {
-        return res.status(400).json({
-          success: false,
-          message: 'Password must be at least 6 characters'
-        });
-      }
-      updateData.customerPassword = customerPassword;
     }
 
     const customer = await Customer.findOneAndUpdate(
-      { customerId },
-      updateData,
+      { userId: customerId },
+      { ...updateData, updatedAt: new Date() },
       { new: true, runValidators: true }
-    );
+    ).select('-__v');
 
     if (!customer) {
       return res.status(404).json({
@@ -205,21 +177,16 @@ export const updateCustomer = async (req, res) => {
       });
     }
 
-    // Remove password from response
-    const { customerPassword: _, ...customerResponse } = customer.toObject();
-
     res.status(200).json({
       success: true,
-      message: 'Customer profile updated successfully',
+      message: 'Customer updated successfully',
       data: {
-        customer: customerResponse
+        customer
       }
     });
-
   } catch (error) {
     console.error('Update customer error:', error);
     
-    // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({
@@ -229,14 +196,6 @@ export const updateCustomer = async (req, res) => {
       });
     }
 
-    // Handle duplicate key error
-    if (error.code === 11000) {
-      return res.status(409).json({
-        success: false,
-        message: 'Customer with this email already exists'
-      });
-    }
-
     res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -245,12 +204,20 @@ export const updateCustomer = async (req, res) => {
   }
 };
 
-// Delete customer profile
+// Delete customer
 export const deleteCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
 
-    const customer = await Customer.findOneAndDelete({ customerId });
+    // Only sellers can delete customers, or users can delete their own account
+    if (req.user.role !== 'seller' && req.user.userId !== customerId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Only sellers can delete customer accounts.'
+      });
+    }
+
+    const customer = await Customer.findOneAndDelete({ userId: customerId });
 
     if (!customer) {
       return res.status(404).json({
@@ -261,16 +228,8 @@ export const deleteCustomer = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Customer profile deleted successfully',
-      data: {
-        deletedCustomer: {
-          customerId: customer.customerId,
-          customerName: customer.customerName,
-          customerEmail: customer.customerEmail
-        }
-      }
+      message: 'Customer deleted successfully'
     });
-
   } catch (error) {
     console.error('Delete customer error:', error);
     res.status(500).json({
@@ -279,74 +238,4 @@ export const deleteCustomer = async (req, res) => {
       error: error.message
     });
   }
-};
-
-// Customer login
-export const loginCustomer = async (req, res) => {
-  try {
-    const { customerEmail, customerPassword } = req.body;
-
-    // Basic validation
-    if (!customerEmail || !customerPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required'
-      });
-    }
-
-    // Find customer with password field included
-    const customer = await Customer.findOne({ 
-      customerEmail: customerEmail.toLowerCase() 
-    }).select('+customerPassword');
-
-    if (!customer) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
-    }
-
-    // Compare password
-    const isValidPassword = await customer.comparePassword(customerPassword);
-    if (!isValidPassword) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid email or password'
-      });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        customerId: customer.customerId,
-        customerEmail: customer.customerEmail 
-      },
-      process.env.JWT_SECRET || 'default-secret-key',
-      { expiresIn: '7d' }
-    );
-
-    // Remove password from response
-    const { customerPassword: _, ...customerResponse } = customer.toObject();
-
-    res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        customer: customerResponse,
-        token
-      }
-    });
-
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-      error: error.message
-    });
-  }
-};
-
-export const registerCustomer = async (req, res) => {
-  return createCustomer(req, res);
 };

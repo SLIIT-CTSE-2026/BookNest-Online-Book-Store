@@ -1,24 +1,13 @@
 import express from 'express';
-
-import { 
-  createCustomer, 
-  getAllCustomers, 
-  getCustomerById, 
-  updateCustomer, 
-  deleteCustomer, 
-  loginCustomer, 
-  registerCustomer 
-} from '../controllers/customerController.js';
+import { getAllCustomers, getCustomerById, updateCustomer, deleteCustomer, createCustomerProfile } from '../controllers/customerController.js';
 import { authenticateToken, authorizeRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Public routes
-router.post('/register', registerCustomer);
-router.post('/login', loginCustomer);
+// Internal endpoint for auth service to create customer profiles
+router.post('/profile', createCustomerProfile);
 
-// Protected routes
-router.post('/', createCustomer);
+// All routes are now protected - authentication is handled by auth-service
 router.get('/', authenticateToken, authorizeRole('customer', 'seller'), getAllCustomers);
 router.get('/:customerId', authenticateToken, getCustomerById);
 router.put('/:customerId', authenticateToken, updateCustomer);
