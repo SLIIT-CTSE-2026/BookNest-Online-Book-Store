@@ -35,6 +35,31 @@ const createCustomerProfile = async (user) => {
   }
 };
 
+// Create seller profile in seller service
+const createSellerProfile = async (user) => {
+  try {
+    const sellerServiceUrl = process.env.SELLER_SERVICE_URL || 'http://localhost:5003';
+    
+    const sellerData = {
+      userId: user.userId,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createDate: user.createDate
+    };
+
+    // Make API call to seller service to create profile
+    await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
+      timeout: 5000
+    });
+    
+  } catch (error) {
+    console.error('Error creating seller profile:', error.message);
+    // Don't fail the registration if profile creation fails
+    // This can be handled asynchronously or retried later
+  }
+};
+
 // Register a new user (customer or seller)
 export const registerUser = async (req, res) => {
   try {
@@ -78,6 +103,11 @@ export const registerUser = async (req, res) => {
     // Create customer profile if user is a customer
     if (newUser.role === 'customer') {
       await createCustomerProfile(newUser);
+    }
+    
+    // Create seller profile if user is a seller
+    if (newUser.role === 'seller') {
+      await createSellerProfile(newUser);
     }
 
     // Generate token
