@@ -1,11 +1,10 @@
 import mongoose from 'mongoose';
 
-const customerSchema = new mongoose.Schema({
+const sellerSchema = new mongoose.Schema({
   userId: {
     type: String,
     required: true,
-    unique: true,
-    index: true
+    unique: true
   },
   name: {
     type: String,
@@ -22,18 +21,8 @@ const customerSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: 'customer',
-    enum: ['customer']
-  },
-
-  // customer-specific fields
-  address: {
-    type: String,
-    trim: true
-  },
-  phone: {
-    type: String,
-    trim: true
+    default: 'seller',
+    enum: ['seller']
   },
   createDate: {
     type: Date,
@@ -43,5 +32,5 @@ const customerSchema = new mongoose.Schema({
   timestamps: true
 });
 
-const Customer = mongoose.model('Customer', customerSchema);
-export default Customer;
+const seller = mongoose.model('Seller', sellerSchema);
+export default seller;
