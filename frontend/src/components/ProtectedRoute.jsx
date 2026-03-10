@@ -10,7 +10,8 @@ export default function ProtectedRoute({ children, requiredRole }) {
 
   if (requiredRole) {
     const user = JSON.parse(userData);
-    if (user.role !== requiredRole) {
+    const allowedRoles = requiredRole.split(',');
+    if (!allowedRoles.includes(user.role)) {
       return <Navigate to="/login" replace />;
     }
   }
