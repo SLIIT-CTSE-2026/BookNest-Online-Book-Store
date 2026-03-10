@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { customerAPI } from '../utils/api';
 
 export default function CustomerProfile() {
   const [customer, setCustomer] = useState(null);
@@ -18,8 +19,8 @@ export default function CustomerProfile() {
     }
 
     const parsedUser = JSON.parse(userData);
-    // Allow access if it's the user's own profile or if user is a seller
-    if (parsedUser.role !== 'customer' && parsedUser.role !== 'seller') {
+    // Allow access if it's the user's own profile
+    if (parsedUser.role !== 'customer') {
       navigate('/login');
       return;
     }
@@ -35,35 +36,21 @@ export default function CustomerProfile() {
   const fetchCustomerProfile = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setError(null);      
       
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/customers/${customerId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      // Check if response is HTML (error page)
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('text/html')) {
-        const text = await response.text();
-        console.error('Received HTML response:', text.substring(0, 200));
-        setError('Service unavailable. Please make sure the API services are running.');
-        return;
-      }
-
-      const data = await response.json();
+      const response = await customerAPI.getCustomerById(customerId);
+      const data = response.data;
       
-      if (response.ok && data.success) {
+      if (data.success) {
         setCustomer(data.data.customer);
       } else {
-        setError(data.message || `HTTP ${response.status}: ${response.statusText}`);
+        setError(data.message || 'Failed to load customer profile');
       }
     } catch (err) {
       console.error('Error fetching customer profile:', err);
-      if (err instanceof TypeError && err.message.includes('fetch')) {
+      if (err.response) {
+        setError(err.response.data.message || `HTTP ${err.response.status}: ${err.response.statusText}`);
+      } else if (err.request) {
         setError('Failed to connect to server. Please make sure the API Gateway is running on port 5000.');
       } else {
         setError(`Network error: ${err.message}`);
