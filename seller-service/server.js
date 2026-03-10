@@ -12,7 +12,16 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/', sellerRoutes);
+app.use('/api/sellers', sellerRoutes);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Seller service is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 const start = async () => {
   try {
