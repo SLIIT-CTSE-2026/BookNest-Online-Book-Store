@@ -18,9 +18,9 @@ api.interceptors.request.use((config) => {
 });
 
 export const authAPI = {
-  login: (credentials) => api.post('/login', credentials),
-  register: (userData) => api.post('/register', userData),
-  verifyToken: () => api.post('/verify-token'),
+  login: (credentials) => api.post('/auth/login', credentials),
+  register: (userData) => api.post('/auth/register', userData),
+  verifyToken: () => api.post('/auth/verify-token'),
 };
 
 export default api;

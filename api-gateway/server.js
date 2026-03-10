@@ -13,6 +13,12 @@ app.use(cors());
 app.use('/api/auth', createProxyMiddleware({
   target: process.env.AUTH_SERVICE_URL || 'http://localhost:5001',
   changeOrigin: true,
+  onProxyReq: (proxyReq, req, res) => {
+    console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to AUTH SERVICE`);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`[${new Date().toISOString()}] Received response from AUTH SERVICE with status ${proxyRes.statusCode}`);
+  }
 }));
 
 app.use('/api/customers', 
@@ -20,6 +26,12 @@ app.use('/api/customers',
   createProxyMiddleware({
     target: process.env.CUSTOMER_SERVICE_URL || 'http://localhost:5002',
     changeOrigin: true,
+    onProxyReq: (proxyReq, req, res) => {
+      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to CUSTOMER SERVICE`);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      console.log(`[${new Date().toISOString()}] Received response from CUSTOMER SERVICE with status ${proxyRes.statusCode}`);
+    }
   })
 );
 
@@ -29,6 +41,12 @@ app.use('/api/sellers',
   createProxyMiddleware({
     target: process.env.SELLER_SERVICE_URL || 'http://localhost:5003',
     changeOrigin: true,
+    onProxyReq: (proxyReq, req, res) => {
+      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to SELLER SERVICE`);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      console.log(`[${new Date().toISOString()}] Received response from SELLER SERVICE with status ${proxyRes.statusCode}`);
+    }
   })
 );
 
