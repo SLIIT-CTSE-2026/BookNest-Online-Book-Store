@@ -62,7 +62,7 @@ export default function CustomerDashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300">
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -76,7 +76,7 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300">
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -90,7 +90,10 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div 
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => navigate(`/customer-profile/${user.userId}`)}
+            >
               <div className="p-6">
                 <div className="flex items-center">
                   <div>

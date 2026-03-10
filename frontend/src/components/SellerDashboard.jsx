@@ -132,7 +132,10 @@ export default function SellerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div 
+            className="bg-white overflow-hidden shadow rounded-lg"
+            onClick={() => navigate(`/seller-profile/${user.userId}`)}
+            >
               <div className="p-6">
                 <div className="flex items-center">
                   <div className="shrink-0">

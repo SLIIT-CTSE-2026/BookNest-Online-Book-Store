@@ -12,16 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/customers', customerRoutes);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Customer service is running',
-    timestamp: new Date().toISOString()
-  });
-});
+app.use('/', customerRoutes);
 
 const start = async () => {
   try {
