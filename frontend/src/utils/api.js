@@ -23,4 +23,11 @@ export const authAPI = {
   verifyToken: () => api.post('/auth/verify-token'),
 };
 
+export const customerAPI = {
+  getCustomerById: (customerId) => api.get(`/customers/${customerId}`),
+  getAllCustomers: (search) => api.get(`/customers${search ? `?search=${search}` : ''}`),
+  updateCustomer: (customerId, updateData) => api.put(`/customers/${customerId}`, updateData),
+  deleteCustomer: (customerId) => api.delete(`/customers/${customerId}`),
+};
+
 export default api;

@@ -3,6 +3,7 @@ import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CustomerDashboard from './components/CustomerDashboard';
+import CustomerProfile from './components/CustomerProfile';
 import SellerDashboard from './components/SellerDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -18,6 +19,14 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="customer">
               <CustomerDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/customer-profile/:customerId" 
+          element={
+            <ProtectedRoute requiredRole="customer,seller">
+              <CustomerProfile />
             </ProtectedRoute>
           } 
         />
