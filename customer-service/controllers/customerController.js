@@ -102,31 +102,8 @@ export const getAllCustomers = async (req, res) => {
 export const getCustomerById = async (req, res) => {
   try {
     const { customerId } = req.params;
-    
-    // Extract user role from headers (set by API Gateway)
-    const userRole = req.headers['x-user-role'];
-    
-    console.log(`GetCustomerById - Request for customerId: ${customerId}`);
-    console.log(`GetCustomerById - User role from header: ${userRole}`);
-    console.log('All headers received:', req.headers);
-    
-    // Basic role validation
-    if (userRole !== 'seller' && userRole !== 'customer') {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied. Invalid user role.'
-      });
-    }
-    
-    // For customer role, we need to verify they're accessing their own profile
-    // This requires the customerId to match the authenticated user's ID
-    // Since we don't have user ID in headers, we'll allow the request to proceed
-    // The actual validation should happen at the API Gateway level or frontend
-    
-    // For seller role, they can view any customer profile
-    // For customer role, business logic assumes frontend handles the validation
 
-    const customer = await Customer.findOne({ userId: customerId }).select('-__v');
+    const customer = await Customer.findOne({ userId: customerId });
     
     if (!customer) {
       return res.status(404).json({

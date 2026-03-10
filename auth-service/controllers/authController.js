@@ -23,7 +23,7 @@ const createCustomerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    await axios.post(`${customerServiceUrl}/api/customers/profile`, customerData, {
+    await axios.post(`${customerServiceUrl}/profile`, customerData, {
       timeout: 5000
     });
     
@@ -45,7 +45,7 @@ const createSellerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
+    await axios.post(`${sellerServiceUrl}/profile`, sellerData, {
       timeout: 5000
     });
     
@@ -191,7 +191,6 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    console.log('User object for token generation:', { userId: user.userId, role: user.role });
     // Generate token
     const token = generateToken(user.userId, user.role);
 
