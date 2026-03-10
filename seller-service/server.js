@@ -28,8 +28,8 @@ const start = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Seller Service - Database Connected");
 
-    app.listen(process.env.PORT, () => {
-      console.log(`Seller Service running on port ${process.env.PORT}`);
+    app.listen(process.env.PORT || 5003, () => {
+      console.log(`Seller Service running on port ${process.env.PORT || 5003}`);
     });
   } catch (error) {
     console.error("Seller Service - Initialization error:", error.message);

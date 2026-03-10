@@ -23,15 +23,12 @@ const createCustomerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    // Make API call to customer service to create profile
     await axios.post(`${customerServiceUrl}/api/customers/profile`, customerData, {
       timeout: 5000
     });
     
   } catch (error) {
     console.error('Error creating customer profile:', error.message);
-    // Don't fail the registration if profile creation fails
-    // This can be handled asynchronously or retried later
   }
 };
 
@@ -48,7 +45,7 @@ const createSellerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    // Make API call to seller service to create profile
+    // Make direct API call to seller service to create profile
     await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
       timeout: 5000
     });
@@ -100,24 +97,27 @@ export const registerUser = async (req, res) => {
 
     await newUser.save();
 
+    // Fetch the saved user to ensure userId is populated
+    const savedUser = await User.findById(newUser._id);
+    
     // Create customer profile if user is a customer
-    if (newUser.role === 'customer') {
-      await createCustomerProfile(newUser);
+    if (savedUser.role === 'customer') {
+      await createCustomerProfile(savedUser);
     }
     
     // Create seller profile if user is a seller
-    if (newUser.role === 'seller') {
-      await createSellerProfile(newUser);
+    if (savedUser.role === 'seller') {
+      await createSellerProfile(savedUser);
     }
 
     // Generate token
-    const token = generateToken(newUser.userId, newUser.role);
+    const token = generateToken(savedUser.userId, savedUser.role);
 
     res.status(201).json({
       success: true,
       message: `${role.charAt(0).toUpperCase() + role.slice(1)} registered successfully`,
       data: {
-        user: newUser,
+        user: savedUser,
         token
       }
     });
