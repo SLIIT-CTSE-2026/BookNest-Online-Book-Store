@@ -12,16 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api', authRoutes);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Auth service is running',
-    timestamp: new Date().toISOString()
-  });
-});
+app.use('/', authRoutes);
 
 const start = async () => {
   try {
