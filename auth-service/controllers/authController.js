@@ -23,15 +23,12 @@ const createCustomerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    // Make API call to customer service to create profile
-    await axios.post(`${customerServiceUrl}/api/customers/profile`, customerData, {
+    await axios.post(`${customerServiceUrl}/profile`, customerData, {
       timeout: 5000
     });
     
   } catch (error) {
     console.error('Error creating customer profile:', error.message);
-    // Don't fail the registration if profile creation fails
-    // This can be handled asynchronously or retried later
   }
 };
 
@@ -48,19 +45,16 @@ const createSellerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    // Make API call to seller service to create profile
-    await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
+    await axios.post(`${sellerServiceUrl}/profile`, sellerData, {
       timeout: 5000
     });
     
   } catch (error) {
     console.error('Error creating seller profile:', error.message);
-    // Don't fail the registration if profile creation fails
-    // This can be handled asynchronously or retried later
   }
 };
 
-// Register a new user (customer or seller)
+// Register a new user
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, role = 'customer' } = req.body;
@@ -99,25 +93,26 @@ export const registerUser = async (req, res) => {
     });
 
     await newUser.save();
-
+    const savedUser = await User.findById(newUser._id);
+    
     // Create customer profile if user is a customer
-    if (newUser.role === 'customer') {
-      await createCustomerProfile(newUser);
+    if (savedUser.role === 'customer') {
+      await createCustomerProfile(savedUser);
     }
     
     // Create seller profile if user is a seller
-    if (newUser.role === 'seller') {
-      await createSellerProfile(newUser);
+    if (savedUser.role === 'seller') {
+      await createSellerProfile(savedUser);
     }
 
     // Generate token
-    const token = generateToken(newUser.userId, newUser.role);
+    const token = generateToken(savedUser.userId, savedUser.role);
 
     res.status(201).json({
       success: true,
       message: `${role.charAt(0).toUpperCase() + role.slice(1)} registered successfully`,
       data: {
-        user: newUser,
+        user: savedUser,
         token
       }
     });
@@ -176,7 +171,7 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // Find user by email (need to include password for comparison)
+    // Find user by email
     const user = await User.findOne({ email }).select('+password');
     
     if (!user) {
@@ -221,7 +216,7 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// Verify token (for other microservices)
+// Verify token
 export const verifyToken = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -306,7 +301,7 @@ export const logoutUser = async (req, res) => {
     // Add token to blacklist
     const blacklistedToken = new Blacklist({
       token,
-      expiresAt: new Date(decoded.exp * 1000) // Convert JWT exp to Date
+      expiresAt: new Date(decoded.exp * 1000)
     });
 
     await blacklistedToken.save();
