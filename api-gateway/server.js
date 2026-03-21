@@ -35,8 +35,10 @@ app.use('/api/sellers',
 
 app.use(
   '/api/products',
+  authenticateToken,
+  authorizeRole('seller', 'customer'),
   createProxyMiddleware({
-    target:  'http://localhost:5004',
+    target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:5004',
     changeOrigin: true,
   })
 );
