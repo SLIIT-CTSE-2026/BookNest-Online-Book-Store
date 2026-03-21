@@ -2,6 +2,7 @@ import express from 'express';
 import { getAllSellers, getSellerById, updateSeller, deleteSeller, createSellerProfile } from '../controllers/sellerController.js';
 const router = express.Router();
 
+router.post('/sellers', createSellerProfile);
 router.post('/profile', createSellerProfile);
 
 router.get('/', getAllSellers);
