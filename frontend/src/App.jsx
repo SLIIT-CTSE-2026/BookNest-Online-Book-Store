@@ -3,10 +3,9 @@ import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CustomerDashboard from './components/CustomerDashboard';
-import CustomerProfile from './components/CustomerProfile';
 import SellerDashboard from './components/SellerDashboard';
+import AddBookPage from './components/AddBookPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import SellerProfile from './components/SellerProfile';
 
 export default function App() {
   return (
@@ -24,26 +23,18 @@ export default function App() {
           } 
         />
         <Route 
-          path="/customer-profile/:customerId" 
-          element={
-            <ProtectedRoute requiredRole="customer">
-              <CustomerProfile />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/seller-profile/:sellerId" 
-          element={
-            <ProtectedRoute requiredRole="seller">
-              <SellerProfile />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
           path="/seller-dashboard" 
           element={
             <ProtectedRoute requiredRole="seller">
               <SellerDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/seller/add-book" 
+          element={
+            <ProtectedRoute requiredRole="seller">
+              <AddBookPage />
             </ProtectedRoute>
           } 
         />
