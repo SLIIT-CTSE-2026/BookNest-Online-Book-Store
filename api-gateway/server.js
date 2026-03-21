@@ -50,6 +50,20 @@ app.use('/api/sellers',
   })
 );
 
+app.use('/api/feedback',
+  authenticateToken,
+  createProxyMiddleware({
+    target: process.env.FEEDBACK_SERVICE_URL || 'http://localhost:5007',
+    changeOrigin: true,
+    onProxyReq: (proxyReq, req, res) => {
+      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to FEEDBACK SERVICE`);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      console.log(`[${new Date().toISOString()}] Received response from FEEDBACK SERVICE with status ${proxyRes.statusCode}`);
+    }
+  })
+);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`API Gateway running on port ${PORT}`);
