@@ -22,17 +22,14 @@ const createCustomerProfile = async (user) => {
       role: user.role,
       createDate: user.createDate
     };
-
-    console.log('Creating customer profile at:', `${customerServiceUrl}/customers`);
     
-    const response = await axios.post(`${customerServiceUrl}/customers`, customerData, {
+    const response = await axios.post(`${customerServiceUrl}/`, customerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
       }
     });
     
-    console.log('Customer profile created:', response.data);
   } catch (error) {
     console.error('Error creating customer profile:', error.message);
     if (error.response) {
@@ -54,16 +51,13 @@ const createSellerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    console.log('Creating seller profile at:', `${sellerServiceUrl}/sellers`);
-    
-    const response = await axios.post(`${sellerServiceUrl}/sellers`, sellerData, {
+    const response = await axios.post(`${sellerServiceUrl}/`, sellerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
       }
     });
     
-    console.log('Seller profile created:', response.data);
   } catch (error) {
     console.error('Error creating seller profile:', error.message);
     if (error.response) {
