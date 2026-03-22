@@ -5,7 +5,7 @@ import Blacklist from '../models/Blacklist.js';
 
 // Generate JWT Token
 const generateToken = (userId, role) => {
-  return jwt.sign({ userId, role }, process.env.JWT_SECRET || 'your-secret-key', {
+  return jwt.sign({ userId, role }, process.env.JWT_SECRET, {
     expiresIn: '7d'
   });
 };
@@ -13,7 +13,7 @@ const generateToken = (userId, role) => {
 // Create customer profile in customer service
 const createCustomerProfile = async (user) => {
   try {
-    const customerServiceUrl = process.env.CUSTOMER_SERVICE_URL || 'http://localhost:5002';
+    const customerServiceUrl = process.env.CUSTOMER_SERVICE_URL;
     
     const customerData = {
       userId: user.userId,
@@ -22,21 +22,27 @@ const createCustomerProfile = async (user) => {
       role: user.role,
       createDate: user.createDate
     };
-
-    await axios.post(`${customerServiceUrl}/profile`, customerData, {
-      timeout: 5000
+    
+    const response = await axios.post(`${customerServiceUrl}/`, customerData, {
+      timeout: 5000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     
   } catch (error) {
     console.error('Error creating customer profile:', error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+    }
   }
 };
 
 // Create seller profile in seller service
 const createSellerProfile = async (user) => {
   try {
-    const sellerServiceUrl = process.env.SELLER_SERVICE_URL || 'http://localhost:5003';
-    
+    const sellerServiceUrl = process.env.SELLER_SERVICE_URL;
+
     const sellerData = {
       userId: user.userId,
       name: user.name,
@@ -45,12 +51,18 @@ const createSellerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    await axios.post(`${sellerServiceUrl}/profile`, sellerData, {
-      timeout: 5000
+    const response = await axios.post(`${sellerServiceUrl}/`, sellerData, {
+      timeout: 5000,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     
   } catch (error) {
     console.error('Error creating seller profile:', error.message);
+    if (error.response) {
+      console.error('Response data:', error.response.data);
+    }
   }
 };
 
@@ -239,7 +251,7 @@ export const verifyToken = async (req, res) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Find user
     const user = await User.findOne({ userId: decoded.userId });
@@ -296,7 +308,7 @@ export const logoutUser = async (req, res) => {
     }
 
     // Verify token to get expiration
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Add token to blacklist
     const blacklistedToken = new Blacklist({
