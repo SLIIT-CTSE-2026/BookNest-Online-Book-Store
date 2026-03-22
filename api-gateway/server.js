@@ -16,11 +16,10 @@ app.use('/api/auth', createProxyMiddleware({
 }));
 
 app.use('/api/customers', 
-  authenticateToken,
-  authorizeRole('customer'),
+  authenticateToken, 
   createProxyMiddleware({
     target: process.env.CUSTOMER_SERVICE_URL,
-    changeOrigin: true,
+    changeOrigin: true,    
   })
 );
 
@@ -29,6 +28,24 @@ app.use('/api/sellers',
   authorizeRole('seller'),
   createProxyMiddleware({
     target: process.env.SELLER_SERVICE_URL,
+    changeOrigin: true,
+  })
+);
+
+app.use(
+  '/api/products',
+  authenticateToken,
+  authorizeRole('seller', 'customer'),
+  createProxyMiddleware({
+    target: process.env.PRODUCT_SERVICE_URL,
+    changeOrigin: true,    
+  })
+);
+
+app.use('/api/feedback',
+  authenticateToken,
+  createProxyMiddleware({
+    target: `${process.env.FEEDBACK_SERVICE_URL}/api/feedback`,
     changeOrigin: true,
   })
 );

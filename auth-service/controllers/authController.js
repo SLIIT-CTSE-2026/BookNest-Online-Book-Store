@@ -28,6 +28,8 @@ const createCustomerProfile = async (user) => {
       headers: {
         'Content-Type': 'application/json'
       }
+    await axios.post(`${customerServiceUrl}/api/customers/profile`, customerData, {
+      timeout: 5000
     });
     
   } catch (error) {
@@ -56,6 +58,9 @@ const createSellerProfile = async (user) => {
       headers: {
         'Content-Type': 'application/json'
       }
+    // Make direct API call to seller service to create profile
+    await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
+      timeout: 5000
     });
     
   } catch (error) {
@@ -63,10 +68,12 @@ const createSellerProfile = async (user) => {
     if (error.response) {
       console.error('Response data:', error.response.data);
     }
+    // Don't fail the registration if profile creation fails
+    // This can be handled asynchronously or retried later
   }
 };
 
-// Register a new user
+// Register a new user (customer or seller)
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, role = 'customer' } = req.body;
@@ -105,6 +112,8 @@ export const registerUser = async (req, res) => {
     });
 
     await newUser.save();
+
+    // Fetch the saved user to ensure userId is populated
     const savedUser = await User.findById(newUser._id);
     
     // Create customer profile if user is a customer
@@ -183,7 +192,7 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // Find user by email
+    // Find user by email (need to include password for comparison)
     const user = await User.findOne({ email }).select('+password');
     
     if (!user) {
@@ -228,7 +237,7 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// Verify token
+// Verify token (for other microservices)
 export const verifyToken = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -313,7 +322,7 @@ export const logoutUser = async (req, res) => {
     // Add token to blacklist
     const blacklistedToken = new Blacklist({
       token,
-      expiresAt: new Date(decoded.exp * 1000)
+      expiresAt: new Date(decoded.exp * 1000) // Convert JWT exp to Date
     });
 
     await blacklistedToken.save();

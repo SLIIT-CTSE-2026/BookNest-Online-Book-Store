@@ -102,8 +102,16 @@ export const getAllCustomers = async (req, res) => {
 export const getCustomerById = async (req, res) => {
   try {
     const { customerId } = req.params;
+    
+    // Check if requesting user matches the customer ID or is authorized
+    if (req.user.role !== 'seller' && req.user.userId !== customerId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only view your own profile.'
+      });
+    }
 
-    const customer = await Customer.findOne({ userId: customerId });
+    const customer = await Customer.findOne({ userId: customerId }).select('-__v');
     
     if (!customer) {
       return res.status(404).json({
@@ -140,9 +148,11 @@ export const updateCustomer = async (req, res) => {
 
     // Basic role validation
     if (userRole !== 'customer') {
+    // Check if requesting user matches the customer ID
+    if (req.user.userId !== customerId) {
       return res.status(403).json({
         success: false,
-        message: 'Access denied. Only customers can update their own profile.'
+        message: 'Access denied. You can only update your own profile.'
       });
     }
 
@@ -207,6 +217,8 @@ export const deleteCustomer = async (req, res) => {
     const userRole = req.headers['x-user-role'];
 
     if (userRole !== 'seller') {
+    // Only sellers can delete customers, or users can delete their own account
+    if (req.user.role !== 'seller' && req.user.userId !== customerId) {
       return res.status(403).json({
         success: false,
         message: 'Access denied. Only sellers can delete customer accounts.'
