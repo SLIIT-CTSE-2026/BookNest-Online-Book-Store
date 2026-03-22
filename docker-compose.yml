@@ -31,6 +31,41 @@ services:
       - booknest-network
 
 
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_PRODUCT_SERVICE_PORT}:${EXTERNAL_PRODUCT_SERVICE_PORT}"
+    container_name: product-service
+    environment:
+      - PORT=${EXTERNAL_PRODUCT_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+      - MONGO_URI=${SELLER_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - booknest-network  
+
+
+  feedback-service:
+    build:
+      context: ./feedback-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_FEEDBACK_SERVICE_PORT}:${EXTERNAL_FEEDBACK_SERVICE_PORT}"
+    container_name: feedback-service
+    environment:
+      - PORT=${EXTERNAL_FEEDBACK_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL}
+      - MONGO_URI=${FEEDBACK_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - booknest-network
+
+
   auth-service:
     build:
       context: ./auth-service
