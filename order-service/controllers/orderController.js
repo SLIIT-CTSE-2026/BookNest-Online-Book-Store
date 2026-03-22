@@ -3,7 +3,31 @@ import axios from 'axios';
 
 // Service URLs - These should be configured in environment variables
 const CUSTOMER_SERVICE_URL = process.env.CUSTOMER_SERVICE_URL || 'http://localhost:5002';
-const SELLER_SERVICE_URL = process.env.SELLER_SERVICE_URL || 'http://localhost:5003';
+const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL || 'http://localhost:5004';
+
+const fetchProductById = async (productId) => {
+  const trimmedBase = (PRODUCT_SERVICE_URL || '').replace(/\/$/, '');
+  const url = `${trimmedBase}/${encodeURIComponent(productId)}`;
+
+  try {
+    const response = await axios.get(url);
+    const product = response.data?.product;
+    if (product) {
+      return product;
+    }
+  } catch (error) {
+    if (error.response?.status === 404) {
+      const notFoundError = new Error('Product not found in product service');
+      notFoundError.status = 404;
+      throw notFoundError;
+    }
+    throw error;
+  }
+
+  const notFoundError = new Error('Product not found in product service');
+  notFoundError.status = 404;
+  throw notFoundError;
+};
 
 const fetchCustomerById = async (customerId) => {
   const trimmedBase = (CUSTOMER_SERVICE_URL || '').replace(/\/$/, '');
@@ -120,29 +144,55 @@ export const createOrder = async (req, res) => {
       // Continue with provided customer data if service is unavailable
     }
 
-    // Validate products and get product details from seller service
+    // Validate products and load authoritative name/price/stock from product service
     const validatedItems = [];
     for (const item of items) {
-      if (!item.productId || !item.productName || !item.quantity || !item.price) {
+      const qty = Number(item.quantity);
+      if (!item.productId || !Number.isFinite(qty) || qty < 1) {
         return res.status(400).json({
           success: false,
-          message: `Invalid item details for product: ${item.productName || 'Unknown'}`
+          message: 'Each item must include a valid productId and quantity (at least 1)'
         });
       }
 
-      // Optionally verify product exists in seller service
+      let product;
       try {
-        await axios.get(`${SELLER_SERVICE_URL}/api/sellers/products/${item.productId}`);
+        product = await fetchProductById(item.productId);
       } catch (error) {
-        console.warn(`Product ${item.productId} verification failed or service unavailable`);
-        // Continue even if product service is unavailable
+        if (error.status === 404 || error.response?.status === 404) {
+          return res.status(404).json({
+            success: false,
+            message: `Product not found: ${item.productId}`
+          });
+        }
+        console.error('Product service error:', error.message);
+        return res.status(503).json({
+          success: false,
+          message: 'Unable to verify products with product service',
+          error: error.message
+        });
+      }
+
+      if (product.isActive === false) {
+        return res.status(400).json({
+          success: false,
+          message: `Product is not available: ${product.title || item.productId}`
+        });
+      }
+
+      const stock = Number(product.stock);
+      if (Number.isFinite(stock) && stock < qty) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for "${product.title}". Available: ${stock}`
+        });
       }
 
       validatedItems.push({
-        productId: item.productId,
-        productName: item.productName,
-        quantity: item.quantity,
-        price: item.price
+        productId: String(product._id),
+        productName: product.title,
+        quantity: qty,
+        price: product.price
       });
     }
 
@@ -422,12 +472,16 @@ export const getOrdersByProductId = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    // First, verify product exists by calling seller service
     try {
-      await axios.get(`${SELLER_SERVICE_URL}/api/sellers/products/${productId}`);
+      await fetchProductById(productId);
     } catch (error) {
-      console.warn(`Product ${productId} verification failed or seller service unavailable`);
-      // Continue even if product service is unavailable
+      if (error.status === 404 || error.response?.status === 404) {
+        return res.status(404).json({
+          success: false,
+          message: 'Product not found in product service'
+        });
+      }
+      console.warn(`Product ${productId} verification failed or product service unavailable`);
     }
 
     const orders = await Order.find({ 'items.productId': productId }).sort({ orderDate: -1 });
@@ -505,43 +559,29 @@ export const getCustomerDetails = async (req, res) => {
 export const getProductDetails = async (req, res) => {
   try {
     const { productId } = req.params;
-    
-    // Forward the authorization header to seller service
-    const authHeader = req.headers.authorization;
-    
-    console.log('Fetching product details from:', `${SELLER_SERVICE_URL}/api/sellers/products/${productId}`);
-    console.log('Auth header present:', !!authHeader);
 
-    const response = await axios.get(`${SELLER_SERVICE_URL}/api/sellers/products/${productId}`, {
-      headers: {
-        Authorization: authHeader
-      }
-    });
+    const product = await fetchProductById(productId);
 
     res.status(200).json({
       success: true,
-      source: 'seller-service',
-      data: response.data.data
+      source: 'product-service',
+      data: product
     });
   } catch (error) {
     const { productId } = req.params;
     console.error('Get product details error:', error.message);
-    console.error('Error stack:', error.stack);
-    console.error('Error code:', error.code);
-    console.error('Request URL:', `${SELLER_SERVICE_URL}/api/sellers/products/${productId}`);
-    
-    if (error.response) {
-      console.error('Seller Service responded with status:', error.response.status);
-      return res.status(error.response.status).json({
+
+    if (error.status === 404 || error.response?.status === 404) {
+      return res.status(404).json({
         success: false,
         message: 'Product not found',
-        error: error.response.data?.message || error.message
+        error: error.response?.data?.message || error.message
       });
     }
 
     res.status(500).json({
       success: false,
-      message: 'Error fetching product details from seller service',
+      message: 'Error fetching product details from product service',
       error: error.message || 'Unknown error'
     });
   }

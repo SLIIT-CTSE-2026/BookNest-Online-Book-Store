@@ -6,11 +6,13 @@ export default function CreateOrder() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [catalog, setCatalog] = useState([]);
+  const [catalogError, setCatalogError] = useState(null);
   const [formData, setFormData] = useState({
     customerId: '',
     customerName: '',
     customerEmail: '',
-    items: [{ productId: '', productName: '', quantity: 1, price: 0 }],
+    items: [{ productId: '', quantity: 1 }],
     shippingAddress: '',
     paymentMethod: 'card',
     notes: ''
@@ -39,10 +41,40 @@ export default function CreateOrder() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const loadProducts = async () => {
+      try {
+        const res = await api.get('/products');
+        if (cancelled) return;
+        if (res.data?.success) {
+          setCatalog(res.data.products || []);
+          setCatalogError(null);
+        } else {
+          setCatalogError(res.data?.message || 'Product list request did not succeed.');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Error loading products:', err);
+          const detail =
+            err.response?.data?.message ||
+            (err.response?.status
+              ? `HTTP ${err.response.status}`
+              : err.message);
+          setCatalogError(
+            `Could not load products (${detail}). If you use MongoDB Atlas, allow your current IP in Network Access and confirm MONGO_URI in the product service.`
+          );
+        }
+      }
+    };
+    loadProducts();
+    return () => { cancelled = true; };
+  }, []);
+
   const handleAddItem = () => {
     setFormData(prev => ({
       ...prev,
-      items: [...prev.items, { productId: '', productName: '', quantity: 1, price: 0 }]
+      items: [...prev.items, { productId: '', quantity: 1 }]
     }));
   };
 
@@ -63,7 +95,7 @@ export default function CreateOrder() {
       items: prev.items.map((item, i) => ({
         ...item,
         ...(i === index ? {
-          [field]: field === 'quantity' || field === 'price' ? parseFloat(value) || 0 : value
+          [field]: field === 'quantity' ? Math.max(1, parseInt(value, 10) || 1) : value
         } : {})
       }))
     }));
@@ -90,13 +122,20 @@ export default function CreateOrder() {
       return;
     }
 
-    // Validate items
     const validItems = formData.items.filter(
-      item => item.productId && item.productName && item.quantity > 0 && item.price > 0
+      (item) => item.productId && item.quantity > 0
     );
     if (validItems.length === 0) {
-      alert('At least one valid item is required (product ID, name, quantity, and price)');
+      alert('Add at least one product with a quantity of at least 1.');
       return;
+    }
+
+    for (const item of validItems) {
+      const p = catalog.find((x) => String(x._id) === String(item.productId));
+      if (p && Number(p.stock) < item.quantity) {
+        alert(`Not enough stock for "${p.title}". Available: ${p.stock}`);
+        return;
+      }
     }
 
     try {
@@ -106,7 +145,7 @@ export default function CreateOrder() {
         customerId: formData.customerId,
         customerName: formData.customerName,
         customerEmail: formData.customerEmail,
-        items: validItems,
+        items: validItems.map(({ productId, quantity }) => ({ productId, quantity })),
         shippingAddress: formData.shippingAddress,
         paymentMethod: formData.paymentMethod,
         notes: formData.notes
@@ -126,8 +165,14 @@ export default function CreateOrder() {
     }
   };
 
+  const productById = (id) => catalog.find((p) => String(p._id) === String(id));
+
   const calculateTotal = () => {
-    return formData.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return formData.items.reduce((total, item) => {
+      const p = productById(item.productId);
+      if (!p) return total;
+      return total + p.price * item.quantity;
+    }, 0);
   };
 
   return (
@@ -212,8 +257,19 @@ export default function CreateOrder() {
             {/* Order Items */}
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h3>
-              
-              {formData.items.map((item, index) => (
+              {catalogError && (
+                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+                  {catalogError}
+                </p>
+              )}
+              <p className="text-sm text-gray-600 mb-4">
+                Choose books from the catalog. The order service loads title and price from the product service when you place the order.
+              </p>
+
+              {formData.items.map((item, index) => {
+                const selected = productById(item.productId);
+                const subtotal = selected ? selected.price * item.quantity : 0;
+                return (
                 <div key={index} className="border border-gray-200 rounded-lg p-4 mb-4">
                   <div className="flex justify-between items-center mb-3">
                     <h4 className="font-medium text-gray-700">Item {index + 1}</h4>
@@ -225,33 +281,26 @@ export default function CreateOrder() {
                       Remove
                     </button>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Product Name *
+                        Product *
                       </label>
-                      <input
-                        type="text"
-                        value={item.productName}
-                        onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Enter product name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Product ID *
-                      </label>
-                      <input
-                        type="text"
+                      <select
                         value={item.productId}
                         onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
                         required
                         className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Enter product ID"
-                      />
+                      >
+                        <option value="">Select a book</option>
+                        {catalog.map((p) => (
+                          <option key={p._id} value={p._id}>
+                            {p.title} — ${Number(p.price).toFixed(2)}
+                            {Number.isFinite(Number(p.stock)) ? ` (stock: ${p.stock})` : ''}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -266,30 +315,30 @@ export default function CreateOrder() {
                         className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Price ($) *
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.price}
-                        onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    </div>
-                    <div className="md:col-span-2 flex items-end">
-                      <div className="text-sm text-gray-600">
-                        Subtotal: <span className="font-semibold text-gray-900">
-                          ${(item.price * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
+                    <div className="md:col-span-3 flex flex-wrap items-end gap-4 text-sm text-gray-600">
+                      {selected ? (
+                        <>
+                          <span>
+                            Unit price:{' '}
+                            <span className="font-semibold text-gray-900">
+                              ${Number(selected.price).toFixed(2)}
+                            </span>
+                          </span>
+                          <span>
+                            Subtotal:{' '}
+                            <span className="font-semibold text-gray-900">
+                              ${subtotal.toFixed(2)}
+                            </span>
+                          </span>
+                        </>
+                      ) : (
+                        <span>Select a product to see pricing.</span>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
 
               <button
                 type="button"

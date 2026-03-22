@@ -55,7 +55,7 @@ router.get('/customer-details/:customerId', getCustomerDetails);
 
 /**
  * @route   GET /api/orders/product-details/:productId
- * @desc    Get product details from seller service (Integration endpoint)
+ * @desc    Get product details from product service (integration endpoint)
  * @access  Private
  */
 router.get('/product-details/:productId', getProductDetails);
