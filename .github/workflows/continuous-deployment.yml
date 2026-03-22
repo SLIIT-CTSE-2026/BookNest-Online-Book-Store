@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [customer-service, seller-service, auth-service, api-gateway, frontend]
-    
+        service: [customer-service, seller-service, auth-service, product-service, feedback-service, api-gateway, frontend]
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
