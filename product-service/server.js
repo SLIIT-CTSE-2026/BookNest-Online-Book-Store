@@ -16,11 +16,6 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Product Service - Database Connected'))
   .catch((err) => console.error('Database connection error:', err));
 
-// Routes
-// API Gateway mounts this service at '/api/products' and Express strips
-// that prefix before the proxy middleware, so the product service sees
-// paths like '/', '/categories', '/seller/:sellerId', etc.
-// Therefore we mount the product routes at the root.
 app.use('/', productRoutes);
 
 // Health check endpoint
@@ -34,7 +29,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 5004;
+const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
   console.log(`Product Service running on port ${PORT}`);

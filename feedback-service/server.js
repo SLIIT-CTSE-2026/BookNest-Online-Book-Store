@@ -29,7 +29,7 @@ const start = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Feedback Service - Database Connected');
 
-    const port = process.env.PORT || 5004;
+    const port = process.env.PORT;
     app.listen(port, () => {
       console.log(`Feedback Service running on port ${port}`);
     });

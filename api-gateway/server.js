@@ -13,25 +13,13 @@ app.use(cors());
 app.use('/api/auth', createProxyMiddleware({
   target: process.env.AUTH_SERVICE_URL,
   changeOrigin: true,
-  onProxyReq: (proxyReq, req, res) => {
-    console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to AUTH SERVICE`);
-  },
-  onProxyRes: (proxyRes, req, res) => {
-    console.log(`[${new Date().toISOString()}] Received response from AUTH SERVICE with status ${proxyRes.statusCode}`);
-  }
 }));
 
 app.use('/api/customers', 
   authenticateToken, 
   createProxyMiddleware({
     target: process.env.CUSTOMER_SERVICE_URL,
-    changeOrigin: true,
-    onProxyReq: (proxyReq, req, res) => {
-      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to CUSTOMER SERVICE`);
-    },
-    onProxyRes: (proxyRes, req, res) => {
-      console.log(`[${new Date().toISOString()}] Received response from CUSTOMER SERVICE with status ${proxyRes.statusCode}`);
-    }
+    changeOrigin: true,    
   })
 );
 
@@ -49,32 +37,20 @@ app.use(
   authenticateToken,
   authorizeRole('seller', 'customer'),
   createProxyMiddleware({
-    target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:5004',
-    changeOrigin: true,
-    onProxyReq: (proxyReq, req, res) => {
-      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to SELLER SERVICE`);
-    },
-    onProxyRes: (proxyRes, req, res) => {
-      console.log(`[${new Date().toISOString()}] Received response from SELLER SERVICE with status ${proxyRes.statusCode}`);
-    }
+    target: process.env.PRODUCT_SERVICE_URL,
+    changeOrigin: true,    
   })
 );
 
 app.use('/api/feedback',
   authenticateToken,
   createProxyMiddleware({
-    target: `${process.env.FEEDBACK_SERVICE_URL || 'http://localhost:5007'}/api/feedback`,
+    target: `${process.env.FEEDBACK_SERVICE_URL}/api/feedback`,
     changeOrigin: true,
-    onProxyReq: (proxyReq, req, res) => {
-      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to FEEDBACK SERVICE`);
-    },
-    onProxyRes: (proxyRes, req, res) => {
-      console.log(`[${new Date().toISOString()}] Received response from FEEDBACK SERVICE with status ${proxyRes.statusCode}`);
-    }
   })
 );
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`API Gateway running on port ${PORT}`);
 });
