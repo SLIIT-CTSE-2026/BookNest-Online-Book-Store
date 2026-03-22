@@ -23,15 +23,13 @@ const createCustomerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    console.log('Creating customer profile at:', `${customerServiceUrl}/customers`);
-    
-    const response = await axios.post(`${customerServiceUrl}/customers`, customerData, {
+    console.log('Creating customer profile at:', `${customerServiceUrl}/api/customers/profile`);
+
+    const response = await axios.post(`${customerServiceUrl}/api/customers/profile`, customerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
       }
-    await axios.post(`${customerServiceUrl}/api/customers/profile`, customerData, {
-      timeout: 5000
     });
     
     console.log('Customer profile created:', response.data);
@@ -56,16 +54,13 @@ const createSellerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    console.log('Creating seller profile at:', `${sellerServiceUrl}/sellers`);
-    
-    const response = await axios.post(`${sellerServiceUrl}/sellers`, sellerData, {
+    console.log('Creating seller profile at:', `${sellerServiceUrl}/api/sellers/profile`);
+
+    const response = await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
       }
-    // Make direct API call to seller service to create profile
-    await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
-      timeout: 5000
     });
     
     console.log('Seller profile created:', response.data);
