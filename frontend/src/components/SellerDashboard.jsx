@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import MyBooks from './MyBooks';
+import EditBookForm from './EditBookForm';
 
 export default function SellerDashboard() {
   const [user, setUser] = useState(null);
+  const [activeView, setActiveView] = useState('dashboard');
+  const [editingBook, setEditingBook] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,120 +65,153 @@ export default function SellerDashboard() {
             <p className="text-gray-600 mt-2">Manage your books and sales</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="shrink-0">
-                    <div className="text-3xl">📖</div>
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-lg font-medium text-gray-900">My Books</h3>
-                    <p className="text-gray-600">Manage your book inventory</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="shrink-0">
-                    <div className="text-3xl">➕</div>
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-lg font-medium text-gray-900">Add Book</h3>
-                    <p className="text-gray-600">List a new book for sale</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="shrink-0">
-                    <div className="text-3xl">📊</div>
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-lg font-medium text-gray-900">Sales</h3>
-                    <p className="text-gray-600">View your sales analytics</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="shrink-0">
-                    <div className="text-3xl">📦</div>
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-lg font-medium text-gray-900">Orders</h3>
-                    <p className="text-gray-600">Manage customer orders</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="shrink-0">
-                    <div className="text-3xl">💰</div>
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-lg font-medium text-gray-900">Earnings</h3>
-                    <p className="text-gray-600">Track your revenue</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div 
-            className="bg-white overflow-hidden shadow rounded-lg"
-            onClick={() => navigate(`/seller-profile/${user.userId}`)}
+          {/* Navigation Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <button
+              onClick={() => {
+                setActiveView('myBooks');
+                setEditingBook(null);
+              }}
+              className={`bg-white overflow-hidden shadow rounded-lg p-6 text-left hover:shadow-lg transition-shadow ${
+                activeView === 'myBooks' ? 'ring-2 ring-indigo-500' : ''
+              }`}
             >
-              <div className="p-6">
-                <div className="flex items-center">
-                  <div className="shrink-0">
-                    <div className="text-3xl">👤</div>
-                  </div>
-                  <div className="ml-5">
-                    <h3 className="text-lg font-medium text-gray-900">Profile</h3>
-                    <p className="text-gray-600">Manage your account</p>
-                  </div>
+              <div className="flex items-center">
+                <div className="shrink-0">
+                  <div className="text-3xl">📖</div>
+                </div>
+                <div className="ml-5">
+                  <h3 className="text-lg font-medium text-gray-900">My Books</h3>
+                  <p className="text-gray-600">Manage your book inventory</p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                setEditingBook(null);
+                navigate('/seller/add-book');
+              }}
+              className="bg-white overflow-hidden shadow rounded-lg p-6 text-left hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-center">
+                <div className="shrink-0">
+                  <div className="text-3xl">➕</div>
+                </div>
+                <div className="ml-5">
+                  <h3 className="text-lg font-medium text-gray-900">Add Book</h3>
+                  <p className="text-gray-600">List a new book for sale</p>
+                </div>
+              </div>
+            </button>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg p-6">
+              <div className="flex items-center">
+                <div className="shrink-0">
+                  <div className="text-3xl">📊</div>
+                </div>
+                <div className="ml-5">
+                  <h3 className="text-lg font-medium text-gray-900">Sales</h3>
+                  <p className="text-gray-600">View your sales analytics</p>
                 </div>
               </div>
             </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg p-6">
+              <div className="flex items-center">
+                <div className="shrink-0">
+                  <div className="text-3xl">📦</div>
+                </div>
+                <div className="ml-5">
+                  <h3 className="text-lg font-medium text-gray-900">Orders</h3>
+                  <p className="text-gray-600">Manage customer orders</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg p-6">
+              <div className="flex items-center">
+                <div className="shrink-0">
+                  <div className="text-3xl">💰</div>
+                </div>
+                <div className="ml-5">
+                  <h3 className="text-lg font-medium text-gray-900">Earnings</h3>
+                  <p className="text-gray-600">Track your revenue</p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setActiveView('dashboard');
+                setEditingBook(null);
+              }}
+              className={`bg-white overflow-hidden shadow rounded-lg p-6 text-left hover:shadow-lg transition-shadow ${
+                activeView === 'dashboard' ? 'ring-2 ring-indigo-500' : ''
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="shrink-0">
+                  <div className="text-3xl">👤</div>
+                </div>
+                <div className="ml-5">
+                  <h3 className="text-lg font-medium text-gray-900">Profile</h3>
+                  <p className="text-gray-600">Manage your account</p>
+                </div>
+              </div>
+            </button>
           </div>
 
-          <div className="mt-8 bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">User ID</label>
-                  <p className="mt-1 text-sm text-gray-900">{user.userId}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <p className="mt-1 text-sm text-gray-900">{user.email}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Role</label>
-                  <p className="mt-1 text-sm text-gray-900 capitalize">{user.role}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Member Since</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {new Date(user.createDate).toLocaleDateString()}
-                  </p>
+          {/* Dynamic Content */}
+          {activeView === 'myBooks' && (
+            <>
+              <div className="mb-8">
+                <MyBooks
+                  sellerId={user.userId}
+                  onEdit={(book) => setEditingBook(book)}
+                />
+              </div>
+              {editingBook && (
+                <EditBookForm
+                  book={editingBook}
+                  onSuccess={() => {
+                    setEditingBook(null);
+                    // Simple way to refresh the list without extra wiring
+                    window.location.reload();
+                  }}
+                  onCancel={() => setEditingBook(null)}
+                />
+              )}
+            </>
+          )}
+
+          {activeView === 'dashboard' && (
+            <div className="bg-white shadow rounded-lg">
+              <div className="px-4 py-5 sm:p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Account Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">User ID</label>
+                    <p className="mt-1 text-sm text-gray-900">{user.userId}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <p className="mt-1 text-sm text-gray-900">{user.email}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Role</label>
+                    <p className="mt-1 text-sm text-gray-900 capitalize">{user.role}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Member Since</label>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {new Date(user.createDate).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

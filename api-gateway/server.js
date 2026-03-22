@@ -33,7 +33,17 @@ app.use('/api/sellers',
   })
 );
 
-const PORT = process.env.PORT;
+app.use(
+  '/api/products',
+  authenticateToken,
+  authorizeRole('seller', 'customer'),
+  createProxyMiddleware({
+    target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:5004',
+    changeOrigin: true,
+  })
+);
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`API Gateway running on port ${PORT}`);
 });
