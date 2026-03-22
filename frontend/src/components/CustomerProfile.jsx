@@ -12,14 +12,13 @@ export default function CustomerProfile() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (!token || !userData) {
       navigate('/login');
       return;
     }
 
     const parsedUser = JSON.parse(userData);
-    // Allow access if it's the user's own profile
     if (parsedUser.role !== 'customer') {
       navigate('/login');
       return;
@@ -30,35 +29,37 @@ export default function CustomerProfile() {
       return;
     }
 
+    const fetchCustomerProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await customerAPI.getCustomerById(customerId);
+        const data = response.data;
+
+        if (data.success) {
+          setCustomer(data.data.customer);
+        } else {
+          setError(data.message || 'Failed to load customer profile');
+        }
+      } catch (err) {
+        console.error('Error fetching customer profile:', err);
+        if (err.response) {
+          setError(err.response.data.message || `HTTP ${err.response.status}: ${err.response.statusText}`);
+        } else if (err.request) {
+          setError('Failed to connect to server. Please make sure the API Gateway is running on port 5000.');
+        } else {
+          setError(`Network error: ${err.message}`);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCustomerProfile();
   }, [navigate, customerId]);
 
-  const fetchCustomerProfile = async () => {
-    try {
-      setLoading(true);
-      setError(null);      
-      
-      const response = await customerAPI.getCustomerById(customerId);
-      const data = response.data;
-      
-      if (data.success) {
-        setCustomer(data.data.customer);
-      } else {
-        setError(data.message || 'Failed to load customer profile');
-      }
-    } catch (err) {
-      console.error('Error fetching customer profile:', err);
-      if (err.response) {
-        setError(err.response.data.message || `HTTP ${err.response.status}: ${err.response.statusText}`);
-      } else if (err.request) {
-        setError('Failed to connect to server. Please make sure the API Gateway is running on port 5000.');
-      } else {
-        setError(`Network error: ${err.message}`);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleBack = () => {
     const userData = JSON.parse(localStorage.getItem('user'));
@@ -151,7 +152,7 @@ export default function CustomerProfile() {
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-6">Profile Details</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-gray-500 mb-2">Personal Information</h4>
@@ -191,14 +192,14 @@ export default function CustomerProfile() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Last Updated</label>
                       <p className="mt-1 text-sm text-gray-900">
-                        {customer.updatedAt 
+                        {customer.updatedAt
                           ? new Date(customer.updatedAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
                           : 'Never updated'
                         }
                       </p>
