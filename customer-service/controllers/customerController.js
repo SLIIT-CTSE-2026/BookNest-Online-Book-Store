@@ -135,11 +135,10 @@ export const updateCustomer = async (req, res) => {
     const { customerId } = req.params;
     const updateData = req.body;
 
-    // Extract user role from headers (set by API Gateway)
+    // Extract user role from headers
     const userRole = req.headers['x-user-role'];
 
-    // Basic role validation - customers can only update their own profile
-    // In a real implementation, we'd need to verify the customerId matches the authenticated user
+    // Basic role validation
     if (userRole !== 'customer') {
       return res.status(403).json({
         success: false,
@@ -147,9 +146,8 @@ export const updateCustomer = async (req, res) => {
       });
     }
 
-    // Remove fields that shouldn't be updated here
     delete updateData.userId;
-    delete updateData.email; // Email updates should go through auth service
+    delete updateData.email;
     delete updateData.role;
 
     // Validate update data
@@ -205,11 +203,9 @@ export const deleteCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
 
-    // Extract user role from headers (set by API Gateway)
+    // Extract user role from headers
     const userRole = req.headers['x-user-role'];
 
-    // Only sellers can delete customer accounts
-    // Customers deleting their own account should be handled through auth service
     if (userRole !== 'seller') {
       return res.status(403).json({
         success: false,

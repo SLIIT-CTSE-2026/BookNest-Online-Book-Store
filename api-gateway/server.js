@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 
 app.use('/api/auth', createProxyMiddleware({
-  target: process.env.AUTH_SERVICE_URL || 'http://localhost:5001',
+  target: process.env.AUTH_SERVICE_URL,
   changeOrigin: true,
 }));
 
@@ -19,7 +19,7 @@ app.use('/api/customers',
   authenticateToken,
   authorizeRole('customer'),
   createProxyMiddleware({
-    target: process.env.CUSTOMER_SERVICE_URL || 'http://localhost:5002',
+    target: process.env.CUSTOMER_SERVICE_URL,
     changeOrigin: true,
   })
 );
@@ -28,7 +28,7 @@ app.use('/api/sellers',
   authenticateToken,
   authorizeRole('seller'),
   createProxyMiddleware({
-    target: process.env.SELLER_SERVICE_URL || 'http://localhost:5003',
+    target: process.env.SELLER_SERVICE_URL,
     changeOrigin: true,
   })
 );
