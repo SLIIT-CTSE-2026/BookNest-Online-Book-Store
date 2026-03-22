@@ -51,3 +51,13 @@ export const requireCustomer = (req, res, next) => {
   }
   next();
 };
+
+export const requireSeller = (req, res, next) => {
+  if (!req.user || req.user.role !== 'seller') {
+    return res.status(403).json({
+      success: false,
+      message: 'Only sellers can perform this action.'
+    });
+  }
+  next();
+};

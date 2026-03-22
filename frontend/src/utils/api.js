@@ -23,4 +23,13 @@ export const authAPI = {
   verifyToken: () => api.post('/auth/verify-token'),
 };
 
+export const feedbackAPI = {
+  create: (payload) => api.post('/feedback', payload),
+  listMine: (params = {}) => api.get('/feedback', { params }),
+  listForSeller: (params = {}) => api.get('/feedback/seller', { params }),
+  getByOrder: (orderId) => api.get(`/feedback/order/${orderId}`),
+  update: (feedbackId, payload) => api.put(`/feedback/${feedbackId}`, payload),
+  remove: (feedbackId) => api.delete(`/feedback/${feedbackId}`),
+};
+
 export default api;

@@ -99,6 +99,25 @@ export const getFeedbackForOrder = async (req, res) => {
   }
 };
 
+export const getSellerFeedbacks = async (req, res) => {
+  try {
+    const filter = { sellerId: req.user.userId };
+    if (req.query.orderId) {
+      filter.orderId = req.query.orderId;
+    }
+
+    const feedback = await Feedback.find(filter).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Seller feedback retrieved',
+      data: { feedback }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch seller feedback' });
+  }
+};
+
 export const updateFeedback = async (req, res) => {
   try {
     const { feedbackId } = req.params;

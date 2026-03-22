@@ -4,6 +4,8 @@ import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CustomerDashboard from './components/CustomerDashboard';
 import SellerDashboard from './components/SellerDashboard';
+import FeedbackPage from './components/FeedbackPage';
+import SellerFeedbackPage from './components/SellerFeedbackPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -21,6 +23,14 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+        <Route
+          path="/customer-feedback"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <FeedbackPage />
+            </ProtectedRoute>
+          }
+        />
         <Route 
           path="/seller-dashboard" 
           element={
@@ -28,6 +38,14 @@ export default function App() {
               <SellerDashboard />
             </ProtectedRoute>
           } 
+        />
+        <Route
+          path="/seller-feedback"
+          element={
+            <ProtectedRoute requiredRole="seller">
+              <SellerFeedbackPage />
+            </ProtectedRoute>
+          }
         />
       </Routes>
     </Router>

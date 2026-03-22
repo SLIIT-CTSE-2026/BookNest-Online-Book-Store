@@ -53,7 +53,7 @@ app.use('/api/sellers',
 app.use('/api/feedback',
   authenticateToken,
   createProxyMiddleware({
-    target: process.env.FEEDBACK_SERVICE_URL || 'http://localhost:5007',
+    target: `${process.env.FEEDBACK_SERVICE_URL || 'http://localhost:5007'}/api/feedback`,
     changeOrigin: true,
     onProxyReq: (proxyReq, req, res) => {
       console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to FEEDBACK SERVICE`);
