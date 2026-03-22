@@ -143,6 +143,11 @@ export const updateCustomer = async (req, res) => {
     const { customerId } = req.params;
     const updateData = req.body;
 
+    // Extract user role from headers
+    const userRole = req.headers['x-user-role'];
+
+    // Basic role validation
+    if (userRole !== 'customer') {
     // Check if requesting user matches the customer ID
     if (req.user.userId !== customerId) {
       return res.status(403).json({
@@ -151,9 +156,8 @@ export const updateCustomer = async (req, res) => {
       });
     }
 
-    // Remove fields that shouldn't be updated here
     delete updateData.userId;
-    delete updateData.email; // Email updates should go through auth service
+    delete updateData.email;
     delete updateData.role;
 
     // Validate update data
@@ -209,6 +213,10 @@ export const deleteCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
 
+    // Extract user role from headers
+    const userRole = req.headers['x-user-role'];
+
+    if (userRole !== 'seller') {
     // Only sellers can delete customers, or users can delete their own account
     if (req.user.role !== 'seller' && req.user.userId !== customerId) {
       return res.status(403).json({

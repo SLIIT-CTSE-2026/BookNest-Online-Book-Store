@@ -32,4 +32,20 @@ export const feedbackAPI = {
   remove: (feedbackId) => api.delete(`/feedback/${feedbackId}`),
 };
 
+
+
+export const productAPI = {
+  createProduct: (productData) => api.post('/products', productData),
+  getAllProducts: () => api.get('/products'),
+  getCategories: () => api.get('/products/categories'),
+  getProductsBySeller: (sellerId) =>
+    api.get(`/products/seller/${sellerId}`),
+  getProductById: (productId) =>
+    api.get(`/products/${productId}`),
+  updateProduct: (productId, updateData) =>
+    api.put(`/products/${productId}`, updateData),
+  deleteProduct: (productId) =>
+    api.delete(`/products/${productId}`),
+};
+
 export default api;

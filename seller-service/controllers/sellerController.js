@@ -150,9 +150,8 @@ export const updateSeller = async (req, res) => {
       });
     }
 
-    // Remove fields that shouldn't be updated here
     delete updateData.userId;
-    delete updateData.email; // Email updates should go through auth service
+    delete updateData.email;
     delete updateData.role;
 
     // Validate update data
@@ -208,7 +207,6 @@ export const deleteSeller = async (req, res) => {
   try {
     const { sellerId } = req.params;
 
-    // Only sellers can delete sellers, or users can delete their own account
     if (req.user.role !== 'seller' && req.user.userId !== sellerId) {
       return res.status(403).json({
         success: false,
