@@ -3,6 +3,14 @@ const Product = require('../models/Product');
 // Create a new product
 exports.createProduct = async (req, res) => {
   try {
+    const { sellerId } = req.body;
+
+    if (!sellerId || typeof sellerId !== 'string' || sellerId.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Invalid or missing sellerId' });
+    }
+
+    // Seller verification removed — accept provided sellerId as valid.
+
     const product = new Product(req.body);
     await product.save();
     res.status(201).json({
@@ -131,24 +139,23 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Delete product (soft delete)
+// Delete product (permanent delete)
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false },
-      { new: true }
-    );
+    const product = await Product.findByIdAndDelete(req.params.id);
+
     if (!product) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
       });
     }
+
     res.status(200).json({
       success: true,
-      message: 'Product deleted successfully'
+      message: 'Product permanently deleted successfully'
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,

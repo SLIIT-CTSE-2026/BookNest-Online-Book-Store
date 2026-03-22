@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { productAPI } from '../utils/api';
+import { productAPI, sellerAPI } from '../utils/api';
 
 export default function AddBookForm({ sellerId, onSuccess, onCancel }) {
   const [formData, setFormData] = useState({
@@ -15,14 +15,31 @@ export default function AddBookForm({ sellerId, onSuccess, onCancel }) {
     pages: '',
     stock: '',
     coverImage: '',
+    sellerId: sellerId || '',
   });
   const [categories, setCategories] = useState([]);
+  const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchCategories();
+    fetchSellers();
+    // if no sellerId passed via props, default to current logged-in user
+    if (!formData.sellerId) {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          if (parsed?.userId) {
+            setFormData(prev => ({ ...prev, sellerId: parsed.userId }));
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+    }
   }, []);
 
   const fetchCategories = async () => {
@@ -31,6 +48,16 @@ export default function AddBookForm({ sellerId, onSuccess, onCancel }) {
       setCategories(response.data.categories || []);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
+    }
+  };
+
+  const fetchSellers = async () => {
+    try {
+      const resp = await sellerAPI.getAllSellers();
+      const list = resp.data?.data?.sellers || [];
+      setSellers(list);
+    } catch (err) {
+      console.error('Failed to fetch sellers:', err);
     }
   };
 
@@ -55,7 +82,7 @@ export default function AddBookForm({ sellerId, onSuccess, onCancel }) {
         publicationYear: formData.publicationYear ? parseInt(formData.publicationYear) : undefined,
         pages: formData.pages ? parseInt(formData.pages) : undefined,
         stock: parseInt(formData.stock) || 0,
-        sellerId: sellerId,
+        sellerId: formData.sellerId || sellerId,
       };
 
       await productAPI.createProduct(productData);
@@ -73,6 +100,7 @@ export default function AddBookForm({ sellerId, onSuccess, onCancel }) {
         pages: '',
         stock: '',
         coverImage: '',
+        sellerId: sellerId || '',
       });
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -102,6 +130,17 @@ export default function AddBookForm({ sellerId, onSuccess, onCancel }) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Seller *</label>
+              <input
+                type="text"
+                name="sellerId"
+                value={formData.sellerId}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Title *

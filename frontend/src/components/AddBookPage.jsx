@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { productAPI } from '../utils/api';
+import { productAPI, sellerAPI } from '../utils/api';
 
 export default function AddBookPage() {
   const navigate = useNavigate();
@@ -20,6 +20,7 @@ export default function AddBookPage() {
     coverImage: '',
   });
   const [categories, setCategories] = useState([]);
+  const [sellers, setSellers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -40,7 +41,10 @@ export default function AddBookPage() {
     }
 
     setUser(parsedUser);
+    // default sellerId to current user
+    setFormData(prev => ({ ...prev, sellerId: parsedUser.userId }));
     fetchCategories();
+    fetchSellers();
   }, [navigate]);
 
   const fetchCategories = async () => {
@@ -49,6 +53,16 @@ export default function AddBookPage() {
       setCategories(response.data.categories || []);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
+    }
+  };
+
+  const fetchSellers = async () => {
+    try {
+      const resp = await sellerAPI.getAllSellers();
+      const list = resp.data?.data?.sellers || [];
+      setSellers(list);
+    } catch (err) {
+      console.error('Failed to fetch sellers:', err);
     }
   };
 
@@ -80,7 +94,7 @@ export default function AddBookPage() {
         pages: formData.pages ? parseInt(formData.pages) : undefined,
         stock: parseInt(formData.stock) || 0,
         coverImage: formData.coverImage || undefined,
-        sellerId: user.userId,
+        sellerId: formData.sellerId || user.userId,
       };
 
       console.log('Sending product data:', productData);
@@ -198,7 +212,7 @@ export default function AddBookPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price ($) <span className="text-red-500">*</span>
+                    Price ($) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -212,6 +226,18 @@ export default function AddBookPage() {
                   placeholder="0.00"
                 />
               </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Seller *</label>
+                  <input
+                    type="text"
+                    name="sellerId"
+                    value={formData.sellerId || user.userId}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
