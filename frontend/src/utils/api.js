@@ -50,6 +50,7 @@ export const productAPI = {
 
 export const orderAPI = {
   // Order CRUD operations
+  getOrders: () => api.get('/orders'),
   createOrder: (orderData) => api.post('/orders', orderData),
   getOrderById: (orderId) => api.get(`/orders/${orderId}`),
   getOrdersByCustomerId: (customerId) => api.get(`/orders/customer/${customerId}`),

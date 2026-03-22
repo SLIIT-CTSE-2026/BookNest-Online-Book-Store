@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { feedbackAPI } from '../utils/api';
+import { feedbackAPI, orderAPI } from '../utils/api';
 
 const initialForm = {
   orderId: '',
@@ -13,7 +13,9 @@ export default function FeedbackPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
+  const [customerOrders, setCustomerOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingOrderOptions, setLoadingOrderOptions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [searchOrderId, setSearchOrderId] = useState('');
@@ -40,6 +42,7 @@ export default function FeedbackPage() {
 
     setUser(parsedUser);
     loadFeedback();
+    loadCustomerOrders();
   }, [navigate]);
 
   const ratingSummary = useMemo(() => {
@@ -52,6 +55,56 @@ export default function FeedbackPage() {
     setError('');
     setMessage('');
   };
+
+  const orderOptions = useMemo(
+    () => customerOrders.filter((order) => order?.orderId),
+    [customerOrders]
+  );
+
+  const productOptionsByOrder = useMemo(() => {
+    const productMap = new Map();
+
+    customerOrders.forEach((order) => {
+      const uniqueProducts = new Map();
+      (order.items || []).forEach((item) => {
+        if (!item?.productId) return;
+        if (!uniqueProducts.has(item.productId)) {
+          uniqueProducts.set(item.productId, {
+            productId: item.productId,
+            productName: item.productName || item.productId
+          });
+        }
+      });
+
+      if (order?.orderId) {
+        productMap.set(order.orderId, Array.from(uniqueProducts.values()));
+      }
+    });
+
+    return productMap;
+  }, [customerOrders]);
+
+  const submitProductOptions = useMemo(() => {
+    if (!formData.orderId) return [];
+    return productOptionsByOrder.get(formData.orderId) || [];
+  }, [formData.orderId, productOptionsByOrder]);
+
+  const searchProductOptions = useMemo(() => {
+    if (searchOrderId) {
+      return productOptionsByOrder.get(searchOrderId) || [];
+    }
+
+    const uniqueProducts = new Map();
+    productOptionsByOrder.forEach((products) => {
+      products.forEach((product) => {
+        if (!uniqueProducts.has(product.productId)) {
+          uniqueProducts.set(product.productId, product);
+        }
+      });
+    });
+
+    return Array.from(uniqueProducts.values());
+  }, [searchOrderId, productOptionsByOrder]);
 
   const loadFeedback = async (orderId = '', productId = '') => {
     setLoading(true);
@@ -67,6 +120,19 @@ export default function FeedbackPage() {
       setError(err.response?.data?.message || 'Failed to load feedback');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCustomerOrders = async () => {
+    setLoadingOrderOptions(true);
+    try {
+      const response = await orderAPI.getOrders();
+      const orders = response.data?.data || [];
+      setCustomerOrders(Array.isArray(orders) ? orders : []);
+    } catch (err) {
+      setError((prev) => prev || err.response?.data?.message || 'Failed to load your orders for feedback selection');
+    } finally {
+      setLoadingOrderOptions(false);
     }
   };
 
@@ -138,13 +204,22 @@ export default function FeedbackPage() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    await loadFeedback(searchOrderId.trim(), searchProductId.trim());
+    await loadFeedback(searchOrderId, searchProductId);
   };
 
   const handleResetSearch = async () => {
     setSearchOrderId('');
     setSearchProductId('');
     await loadFeedback('', '');
+  };
+
+  const handleOrderSelectChange = (orderId) => {
+    setFormData((prev) => ({ ...prev, orderId, productId: '' }));
+  };
+
+  const handleSearchOrderChange = (orderId) => {
+    setSearchOrderId(orderId);
+    setSearchProductId('');
   };
 
   const handleLogout = () => {
@@ -209,29 +284,47 @@ export default function FeedbackPage() {
                 <label htmlFor="orderId" className="block text-sm font-medium text-slate-700 mb-1">
                   Order ID
                 </label>
-                <input
+                <select
                   id="orderId"
-                  type="text"
                   value={formData.orderId}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, orderId: e.target.value }))}
+                  onChange={(e) => handleOrderSelectChange(e.target.value)}
                   required
+                  disabled={loadingOrderOptions || orderOptions.length === 0}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                  placeholder="e.g. ORDER-1001"
-                />
+                >
+                  <option value="">
+                    {loadingOrderOptions
+                      ? 'Loading your orders...'
+                      : orderOptions.length
+                        ? 'Select an order'
+                        : 'No orders available'}
+                  </option>
+                  {orderOptions.map((order) => (
+                    <option key={order._id || order.orderId} value={order.orderId}>
+                      {order.orderId}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label htmlFor="productId" className="block text-sm font-medium text-slate-700 mb-1">
                   Product ID (Optional)
                 </label>
-                <input
+                <select
                   id="productId"
-                  type="text"
                   value={formData.productId}
                   onChange={(e) => setFormData((prev) => ({ ...prev, productId: e.target.value }))}
+                  disabled={!formData.orderId || submitProductOptions.length === 0}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                  placeholder="Leave blank for order-level feedback"
-                />
+                >
+                  <option value="">Order-level feedback (no product selected)</option>
+                  {submitProductOptions.map((product) => (
+                    <option key={product.productId} value={product.productId}>
+                      {product.productName} ({product.productId})
+                    </option>
+                  ))}
+                </select>
                 <p className="text-xs text-slate-500 mt-1">
                   Add Product ID for product-level feedback. Leave empty to add feedback for the full order.
                 </p>
@@ -284,20 +377,31 @@ export default function FeedbackPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <h2 className="text-xl font-bold text-slate-900">Feedback History</h2>
               <form onSubmit={handleSearch} className="flex gap-2">
-                <input
-                  type="text"
+                <select
                   value={searchOrderId}
-                  onChange={(e) => setSearchOrderId(e.target.value)}
+                  onChange={(e) => handleSearchOrderChange(e.target.value)}
                   className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                  placeholder="Filter by Order ID"
-                />
-                <input
-                  type="text"
+                >
+                  <option value="">All orders</option>
+                  {orderOptions.map((order) => (
+                    <option key={`search-${order._id || order.orderId}`} value={order.orderId}>
+                      {order.orderId}
+                    </option>
+                  ))}
+                </select>
+                <select
                   value={searchProductId}
                   onChange={(e) => setSearchProductId(e.target.value)}
+                  disabled={searchProductOptions.length === 0}
                   className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                  placeholder="Filter by Product ID"
-                />
+                >
+                  <option value="">All products</option>
+                  {searchProductOptions.map((product) => (
+                    <option key={`search-${product.productId}`} value={product.productId}>
+                      {product.productName} ({product.productId})
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="submit"
                   className="bg-slate-800 hover:bg-black text-white px-3 py-2 rounded-lg text-sm font-semibold"
