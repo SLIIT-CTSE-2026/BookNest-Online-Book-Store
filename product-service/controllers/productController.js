@@ -1,4 +1,12 @@
 const Product = require('../models/Product');
+const {
+  getRelevantFeedbackForProduct,
+  getFeedbackHealth
+} = require('../services/feedbackService');
+const {
+  getSellerHealth,
+  getSellerByUserId
+} = require('../services/sellerService');
 
 // Create a new product
 exports.createProduct = async (req, res) => {
@@ -220,6 +228,107 @@ exports.syncProductRatings = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: error.message
+    });
+  }
+};
+
+// Get relevant feedback for a product by forwarding caller token to feedback-service.
+exports.getProductFeedback = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    const feedbackResponse = await getRelevantFeedbackForProduct(productId, req.headers.authorization || '');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Relevant feedback retrieved successfully',
+      source: feedbackResponse.source,
+      productId,
+      data: feedbackResponse.data || {}
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Failed to fetch product feedback from feedback-service'
+    });
+  }
+};
+
+// Check feedback-service connectivity from product-service.
+exports.getFeedbackServiceHealth = async (_req, res) => {
+  try {
+    const health = await getFeedbackHealth();
+    return res.status(200).json({
+      success: true,
+      message: 'Feedback service health fetched successfully',
+      data: health
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Failed to fetch feedback service health'
+    });
+  }
+};
+
+// Check seller-service connectivity from product-service.
+exports.getSellerServiceHealth = async (_req, res) => {
+  try {
+    const health = await getSellerHealth();
+    return res.status(200).json({
+      success: true,
+      message: 'Seller service health fetched successfully',
+      data: health
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Failed to fetch seller service health'
+    });
+  }
+};
+
+// Get seller profile for a product by reading sellerId from product.
+exports.getProductSellerProfile = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    if (!product.sellerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Product does not have sellerId'
+      });
+    }
+
+    const seller = await getSellerByUserId(product.sellerId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Seller profile retrieved successfully',
+      productId,
+      sellerId: product.sellerId,
+      data: { seller }
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || 'Failed to fetch seller profile from seller-service'
     });
   }
 };
