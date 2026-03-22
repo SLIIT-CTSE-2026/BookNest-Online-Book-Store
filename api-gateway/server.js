@@ -74,6 +74,18 @@ app.use('/api/feedback',
   })
 );
 
+app.use('/api/orders',
+  authenticateToken,
+  authorizeRole('customer', 'seller', 'admin'),
+  createProxyMiddleware({
+    target: process.env.ORDER_SERVICE_URL || 'http://localhost:5005',
+    changeOrigin: true,
+    pathRewrite: (path) => `/api/orders${path}`,
+  })
+);
+
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`API Gateway running on port ${PORT}`);
