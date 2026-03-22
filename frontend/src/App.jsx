@@ -7,6 +7,9 @@ import CustomerProfile from './components/CustomerProfile';
 import SellerDashboard from './components/SellerDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import SellerProfile from './components/SellerProfile';
+import OrderList from './components/OrderList';
+import OrderDetails from './components/OrderDetails';
+import CreateOrder from './components/CreateOrder';
 
 export default function App() {
   return (
@@ -44,6 +47,30 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="seller">
               <SellerDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/orders" 
+          element={
+            <ProtectedRoute>
+              <OrderList />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/order-details/:orderId" 
+          element={
+            <ProtectedRoute>
+              <OrderDetails />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/create-order" 
+          element={
+            <ProtectedRoute>
+              <CreateOrder />
             </ProtectedRoute>
           } 
         />
