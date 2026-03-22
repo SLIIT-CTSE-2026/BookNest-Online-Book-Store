@@ -45,4 +45,18 @@ export const sellerAPI = {
   deleteSeller: (sellerId) => api.delete(`/sellers/${sellerId}`),
 };
 
+export const orderAPI = {
+  // Order CRUD operations
+  createOrder: (orderData) => api.post('/orders', orderData),
+  getOrderById: (orderId) => api.get(`/orders/${orderId}`),
+  getOrdersByCustomerId: (customerId) => api.get(`/orders/customer/${customerId}`),
+  getOrdersByProductId: (productId) => api.get(`/orders/product/${productId}`),
+  updateOrder: (orderId, updateData) => api.patch(`/orders/${orderId}`, updateData),
+  deleteOrder: (orderId) => api.delete(`/orders/${orderId}`),
+  
+  // Integration endpoints
+  getCustomerDetails: (customerId) => api.get(`/orders/customer-details/${customerId}`),
+  getProductDetails: (productId) => api.get(`/orders/product-details/${productId}`),
+};
+
 export default api;
