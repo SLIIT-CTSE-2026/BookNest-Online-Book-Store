@@ -1,0 +1,41 @@
+import axios from 'axios';
+
+export const verifyOrderOwnership = async (orderId, customerId, token) => {
+  const orderServiceUrl = process.env.ORDER_SERVICE_URL;
+
+  if (!orderServiceUrl) {
+    const err = new Error('ORDER_SERVICE_URL is not configured');
+    err.status = 503;
+    throw err;
+  }
+
+  try {
+    const response = await axios.get(`${orderServiceUrl}/api/orders/${orderId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 5000
+    });
+
+    const order = response.data?.data?.order || response.data?.order;
+    if (!order) {
+      const err = new Error('Order not found');
+      err.status = 404;
+      throw err;
+    }
+
+    if (order.customerId && order.customerId !== customerId) {
+      const err = new Error('Order does not belong to the authenticated customer');
+      err.status = 403;
+      throw err;
+    }
+
+    return order;
+  } catch (error) {
+    if (error.status) {
+      throw error;
+    }
+
+    const err = new Error(error.response?.data?.message || 'Unable to verify order');
+    err.status = error.response?.status || 502;
+    throw err;
+  }
+};
