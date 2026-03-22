@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Product Service - Database Connected'))
   .catch((err) => console.error('Database connection error:', err));
 
-app.use('/', productRoutes);
+app.use('/api/products', productRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
