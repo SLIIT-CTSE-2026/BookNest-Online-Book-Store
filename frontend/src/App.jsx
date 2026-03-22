@@ -45,6 +45,9 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="seller">
               <AddBookPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/seller-feedback"
           element={
