@@ -4,6 +4,7 @@ import { feedbackAPI } from '../utils/api';
 
 const initialForm = {
   orderId: '',
+  productId: '',
   rating: '5',
   comment: ''
 };
@@ -16,6 +17,7 @@ export default function FeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [searchOrderId, setSearchOrderId] = useState('');
+  const [searchProductId, setSearchProductId] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState('');
@@ -51,11 +53,13 @@ export default function FeedbackPage() {
     setMessage('');
   };
 
-  const loadFeedback = async (orderId = '') => {
+  const loadFeedback = async (orderId = '', productId = '') => {
     setLoading(true);
     clearAlerts();
     try {
-      const params = orderId ? { orderId } : {};
+      const params = {};
+      if (orderId) params.orderId = orderId;
+      if (productId) params.productId = productId;
       const response = await feedbackAPI.listMine(params);
       const feedbackItems = response.data?.data?.feedback || [];
       setItems(feedbackItems);
@@ -74,13 +78,14 @@ export default function FeedbackPage() {
     try {
       await feedbackAPI.create({
         orderId: formData.orderId.trim(),
+        productId: formData.productId.trim(),
         rating: Number(formData.rating),
         comment: formData.comment.trim()
       });
 
       setMessage('Feedback submitted successfully.');
       setFormData(initialForm);
-      await loadFeedback(searchOrderId.trim());
+      await loadFeedback(searchOrderId.trim(), searchProductId.trim());
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create feedback');
     } finally {
@@ -111,7 +116,7 @@ export default function FeedbackPage() {
       });
       setMessage('Feedback updated successfully.');
       cancelEdit();
-      await loadFeedback(searchOrderId.trim());
+      await loadFeedback(searchOrderId.trim(), searchProductId.trim());
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update feedback');
     }
@@ -125,7 +130,7 @@ export default function FeedbackPage() {
     try {
       await feedbackAPI.remove(feedbackId);
       setMessage('Feedback deleted successfully.');
-      await loadFeedback(searchOrderId.trim());
+      await loadFeedback(searchOrderId.trim(), searchProductId.trim());
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete feedback');
     }
@@ -133,12 +138,13 @@ export default function FeedbackPage() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    await loadFeedback(searchOrderId.trim());
+    await loadFeedback(searchOrderId.trim(), searchProductId.trim());
   };
 
   const handleResetSearch = async () => {
     setSearchOrderId('');
-    await loadFeedback('');
+    setSearchProductId('');
+    await loadFeedback('', '');
   };
 
   const handleLogout = () => {
@@ -179,7 +185,7 @@ export default function FeedbackPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <section className="mb-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <h1 className="text-3xl font-bold text-slate-900">My Feedback</h1>
-          <p className="text-slate-600 mt-2">Create and manage your feedback for completed orders.</p>
+          <p className="text-slate-600 mt-2">Create and manage feedback for each product in your completed orders.</p>
           <p className="text-sm text-cyan-700 font-semibold mt-2">{ratingSummary}</p>
         </section>
 
@@ -212,6 +218,23 @@ export default function FeedbackPage() {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   placeholder="e.g. ORDER-1001"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="productId" className="block text-sm font-medium text-slate-700 mb-1">
+                  Product ID (Optional)
+                </label>
+                <input
+                  id="productId"
+                  type="text"
+                  value={formData.productId}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, productId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
+                  placeholder="Leave blank for order-level feedback"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Add Product ID for product-level feedback. Leave empty to add feedback for the full order.
+                </p>
               </div>
 
               <div>
@@ -268,6 +291,13 @@ export default function FeedbackPage() {
                   className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   placeholder="Filter by Order ID"
                 />
+                <input
+                  type="text"
+                  value={searchProductId}
+                  onChange={(e) => setSearchProductId(e.target.value)}
+                  className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
+                  placeholder="Filter by Product ID"
+                />
                 <button
                   type="submit"
                   className="bg-slate-800 hover:bg-black text-white px-3 py-2 rounded-lg text-sm font-semibold"
@@ -298,6 +328,9 @@ export default function FeedbackPage() {
                       <div>
                         <p className="text-sm text-slate-500">Order</p>
                         <p className="font-semibold text-slate-900">{item.orderId}</p>
+                        <p className="text-sm text-slate-500 mt-1">Product</p>
+                        <p className="font-semibold text-slate-900">{item.productName || item.productId}</p>
+                        <p className="text-xs text-slate-500">{item.productId}</p>
                       </div>
                       <div className="text-sm text-slate-500">
                         {new Date(item.updatedAt || item.createdAt).toLocaleString()}

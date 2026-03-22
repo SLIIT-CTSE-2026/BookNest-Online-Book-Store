@@ -8,7 +8,6 @@ import AddBookPage from './components/AddBookPage';
 import FeedbackPage from './components/FeedbackPage';
 import SellerFeedbackPage from './components/SellerFeedbackPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import SellerProfile from './components/SellerProfile';
 import OrderList from './components/OrderList';
 import OrderDetails from './components/OrderDetails';
 import CreateOrder from './components/CreateOrder';
@@ -49,6 +48,9 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="seller">
               <AddBookPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route
           path="/seller-feedback"
           element={

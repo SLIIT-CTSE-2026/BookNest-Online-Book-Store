@@ -6,6 +6,7 @@ import {
   getOrderById,
   deleteOrder,
   getOrdersByCustomerId,
+  getCustomerOrderById,
   getOrdersByProductId,
   getCustomerDetails,
   getProductDetails
@@ -30,6 +31,13 @@ router.get('/', getOrders);
  * @access  Private
  */
 router.get('/customer/:customerId', getOrdersByCustomerId);
+
+/**
+ * @route   GET /api/orders/customer/:customerId/order/:orderId
+ * @desc    Get single customer order by order ID
+ * @access  Private
+ */
+router.get('/customer/:customerId/order/:orderId', getCustomerOrderById);
 
 /**
  * @route   GET /api/orders/product/:productId

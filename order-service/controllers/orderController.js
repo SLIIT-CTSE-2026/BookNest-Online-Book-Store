@@ -5,6 +5,49 @@ import axios from 'axios';
 const CUSTOMER_SERVICE_URL = process.env.CUSTOMER_SERVICE_URL || 'http://localhost:5002';
 const SELLER_SERVICE_URL = process.env.SELLER_SERVICE_URL || 'http://localhost:5003';
 
+const fetchCustomerById = async (customerId) => {
+  const trimmedBase = (CUSTOMER_SERVICE_URL || '').replace(/\/$/, '');
+  const candidates = [
+    `${trimmedBase}/${customerId}`,
+    `${trimmedBase}/api/customers/${customerId}`,
+    `http://localhost:5002/api/customers/${customerId}`
+  ];
+
+  let lastError;
+  for (const url of candidates) {
+    try {
+      const response = await axios.get(url);
+      const customer = response.data?.data?.customer || response.data?.data;
+      if (customer) {
+        return customer;
+      }
+    } catch (error) {
+      lastError = error;
+      if (error.response?.status !== 404) {
+        throw error;
+      }
+    }
+  }
+
+  const notFoundError = new Error('Customer not found in customer service');
+  notFoundError.status = 404;
+  if (lastError) {
+    notFoundError.cause = lastError;
+  }
+  throw notFoundError;
+};
+
+const canAccessOrder = (req, order) => {
+  const role = req.user?.role;
+  const userId = req.user?.userId || req.user?.id;
+
+  if (role === 'seller' || role === 'admin') {
+    return true;
+  }
+
+  return Boolean(userId && order.customerId === userId);
+};
+
 /**
  * Get orders
  * - customers: only their own orders
@@ -65,17 +108,9 @@ export const createOrder = async (req, res) => {
     // Verify customer exists by calling customer service
     let customerDetails;
     try {
-      const customerResponse = await axios.get(`${CUSTOMER_SERVICE_URL}/${customerId}`);
-      customerDetails = customerResponse.data?.data?.customer || customerResponse.data?.data;
-      
-      if (!customerDetails) {
-        return res.status(404).json({
-          success: false,
-          message: 'Customer not found'
-        });
-      }
+      customerDetails = await fetchCustomerById(customerId);
     } catch (error) {
-      if (error.response && error.response.status === 404) {
+      if (error.status === 404 || (error.response && error.response.status === 404)) {
         return res.status(404).json({
           success: false,
           message: 'Customer not found in customer service'
@@ -170,6 +205,13 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
+    if (!canAccessOrder(req, order)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied for this order'
+      });
+    }
+
     // Update status if provided
     if (status) {
       order.status = status;
@@ -220,6 +262,13 @@ export const getOrderById = async (req, res) => {
       });
     }
 
+    if (!canAccessOrder(req, order)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied for this order'
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: order
@@ -243,7 +292,7 @@ export const deleteOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const order = await Order.findOneAndDelete({ orderId });
+    const order = await Order.findOne({ orderId });
 
     if (!order) {
       return res.status(404).json({
@@ -251,6 +300,15 @@ export const deleteOrder = async (req, res) => {
         message: 'Order not found'
       });
     }
+
+    if (!canAccessOrder(req, order)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied for this order'
+      });
+    }
+
+    await Order.deleteOne({ _id: order._id });
 
     res.status(200).json({
       success: true,
@@ -274,12 +332,21 @@ export const deleteOrder = async (req, res) => {
 export const getOrdersByCustomerId = async (req, res) => {
   try {
     const { customerId } = req.params;
+    const role = req.user?.role;
+    const userId = req.user?.userId || req.user?.id;
+
+    if (role === 'customer' && userId !== customerId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only view your own orders.'
+      });
+    }
 
     // First, verify customer exists by calling customer service
     try {
-      await axios.get(`${CUSTOMER_SERVICE_URL}/${customerId}`);
+      await fetchCustomerById(customerId);
     } catch (error) {
-      if (error.response && error.response.status === 404) {
+      if (error.status === 404 || (error.response && error.response.status === 404)) {
         return res.status(404).json({
           success: false,
           message: 'Customer not found in customer service'
@@ -300,6 +367,47 @@ export const getOrdersByCustomerId = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error retrieving customer orders',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get a single order for a specific customer
+ * @route GET /api/orders/customer/:customerId/order/:orderId
+ * @access Private
+ */
+export const getCustomerOrderById = async (req, res) => {
+  try {
+    const { customerId, orderId } = req.params;
+    const role = req.user?.role;
+    const userId = req.user?.userId || req.user?.id;
+
+    if (role === 'customer' && userId !== customerId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only view your own orders.'
+      });
+    }
+
+    const order = await Order.findOne({ orderId, customerId });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: order
+    });
+  } catch (error) {
+    console.error('Get customer order by ID error:', error.message);
+    return res.status(500).json({
+      success: false,
+      message: 'Error retrieving customer order',
       error: error.message
     });
   }

@@ -172,3 +172,54 @@ exports.getCategories = async (req, res) => {
     });
   }
 };
+
+// Sync product rating summary from feedback service
+exports.syncProductRatings = async (req, res) => {
+  try {
+    const { productId, averageRating, ratingsCount } = req.body;
+
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: 'productId is required'
+      });
+    }
+
+    const normalizedAverage = Number(averageRating || 0);
+    const normalizedCount = Number(ratingsCount || 0);
+
+    if (Number.isNaN(normalizedAverage) || Number.isNaN(normalizedCount)) {
+      return res.status(400).json({
+        success: false,
+        message: 'averageRating and ratingsCount must be numeric values'
+      });
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      productId,
+      {
+        'ratings.average': Math.max(0, Math.min(5, normalizedAverage)),
+        'ratings.count': Math.max(0, normalizedCount)
+      },
+      { new: true }
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Product ratings synced successfully',
+      product
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
