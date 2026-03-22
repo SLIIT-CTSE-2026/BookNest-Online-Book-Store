@@ -46,8 +46,6 @@ export default function EditBookForm({ book, onSuccess, onCancel }) {
         const response = await productAPI.getCategories();
         setCategories(response.data.categories || []);
       } catch (err) {
-        // best-effort; editing still works without categories list
-        // eslint-disable-next-line no-console
         console.error('Failed to fetch categories:', err);
       }
     };
@@ -84,7 +82,6 @@ export default function EditBookForm({ book, onSuccess, onCancel }) {
       setSuccess('Book updated successfully!');
       if (onSuccess) onSuccess();
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Error updating book:', err);
       const errorMessage =
         err.response?.data?.message ||

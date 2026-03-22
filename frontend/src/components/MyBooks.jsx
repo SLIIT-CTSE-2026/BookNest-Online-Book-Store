@@ -8,19 +8,7 @@ export default function MyBooks({ sellerId, onEdit }) {
   const [selectedBook, setSelectedBook] = useState(null);
 
   useEffect(() => {
-    fetchBooks();
-  }, [sellerId]);
-
-  useEffect(() => {
-    if (!selectedBook) return;
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') setSelectedBook(null);
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [selectedBook]);
-
-  const fetchBooks = async () => {
+    const fetchBooks = async () => {
     try {
       setLoading(true);
       const response = await productAPI.getProductsBySeller(sellerId);
@@ -32,6 +20,18 @@ export default function MyBooks({ sellerId, onEdit }) {
       setLoading(false);
     }
   };
+
+    fetchBooks();
+  }, [sellerId]);
+
+  useEffect(() => {
+    if (!selectedBook) return;
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setSelectedBook(null);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [selectedBook]);
 
   const handleDelete = async (bookId) => {
     if (!window.confirm('Are you sure you want to delete this book?')) {

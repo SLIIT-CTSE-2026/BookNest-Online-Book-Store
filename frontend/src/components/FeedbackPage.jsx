@@ -38,7 +38,7 @@ export default function FeedbackPage() {
 
     setUser(parsedUser);
     loadFeedback();
-  }, [navigate]);
+}, [navigate, loadFeedback]);
 
   const ratingSummary = useMemo(() => {
     if (!items.length) return 'No ratings yet';
@@ -51,7 +51,7 @@ export default function FeedbackPage() {
     setMessage('');
   };
 
-  const loadFeedback = async (orderId = '') => {
+  const loadFeedback = useCallback(async (orderId = '') => {
     setLoading(true);
     clearAlerts();
     try {
@@ -64,7 +64,7 @@ export default function FeedbackPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
