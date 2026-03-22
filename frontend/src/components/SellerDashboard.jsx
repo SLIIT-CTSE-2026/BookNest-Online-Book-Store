@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import MyBooks from './MyBooks';
 import EditBookForm from './EditBookForm';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function SellerDashboard() {
   const [user, setUser] = useState(null);
@@ -160,6 +160,41 @@ export default function SellerDashboard() {
                 </div>
               </div>
             </button>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div className="shrink-0">
+                    <div className="text-3xl">👤</div>
+                  </div>
+                  <div className="ml-5">
+                    <h3 className="text-lg font-medium text-gray-900">Profile</h3>
+                    <p className="text-gray-600">Manage your account</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="shrink-0">
+                      <div className="text-3xl">⭐</div>
+                    </div>
+                    <div className="ml-5">
+                      <h3 className="text-lg font-medium text-gray-900">Customer Feedback</h3>
+                      <p className="text-gray-600">Read ratings from your customers</p>
+                    </div>
+                  </div>
+                  <Link
+                    to="/seller-feedback"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                  >
+                    Open
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Dynamic Content */}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function CustomerDashboard() {
   const [user, setUser] = useState(null);
@@ -62,7 +62,7 @@ export default function CustomerDashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -76,7 +76,7 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -90,10 +90,7 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div 
-              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-              onClick={() => navigate(`/customer-profile/${user.userId}`)}
-            >
+            <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -103,6 +100,28 @@ export default function CustomerDashboard() {
                     <h3 className="text-lg font-medium text-gray-900">Profile</h3>
                     <p className="text-gray-600">Manage your account</p>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div>
+                      <div className="text-3xl">⭐</div>
+                    </div>
+                    <div className="ml-5">
+                      <h3 className="text-lg font-medium text-gray-900">My Feedback</h3>
+                      <p className="text-gray-600">Create and manage order feedback</p>
+                    </div>
+                  </div>
+                  <Link
+                    to="/customer-feedback"
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                  >
+                    Open
+                  </Link>
                 </div>
               </div>
             </div>

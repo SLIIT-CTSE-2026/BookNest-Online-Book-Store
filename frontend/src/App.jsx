@@ -5,6 +5,8 @@ import RegisterPage from './components/RegisterPage';
 import CustomerDashboard from './components/CustomerDashboard';
 import SellerDashboard from './components/SellerDashboard';
 import AddBookPage from './components/AddBookPage';
+import FeedbackPage from './components/FeedbackPage';
+import SellerFeedbackPage from './components/SellerFeedbackPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -22,6 +24,14 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+        <Route
+          path="/customer-feedback"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <FeedbackPage />
+            </ProtectedRoute>
+          }
+        />
         <Route 
           path="/seller-dashboard" 
           element={
@@ -35,8 +45,13 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="seller">
               <AddBookPage />
+        <Route
+          path="/seller-feedback"
+          element={
+            <ProtectedRoute requiredRole="seller">
+              <SellerFeedbackPage />
             </ProtectedRoute>
-          } 
+          }
         />
       </Routes>
     </Router>
