@@ -81,7 +81,9 @@ export default function OrderList() {
         <div className="text-center">
           <div className="text-red-600 text-xl mb-4">⚠️ {error}</div>
           <button
-            onClick={() => navigate('/customer-dashboard')}
+            onClick={() =>
+              navigate(user?.role === 'seller' ? '/seller-dashboard' : '/customer-dashboard')
+            }
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition duration-300"
           >
             Go to Dashboard
@@ -116,20 +118,32 @@ export default function OrderList() {
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">My Orders</h2>
-            <p className="text-gray-600 mt-2">Track and manage your book orders</p>
+            <h2 className="text-3xl font-bold text-gray-900">
+              {user?.role === 'seller' ? 'Customer orders' : 'My Orders'}
+            </h2>
+            <p className="text-gray-600 mt-2">
+              {user?.role === 'seller'
+                ? 'View and update orders from your customers'
+                : 'Track and manage your book orders'}
+            </p>
           </div>
 
           {orders.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow">
               <div className="text-6xl mb-4">📦</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No Orders Yet</h3>
-              <p className="text-gray-600 mb-6">Start browsing our collection to place your first order!</p>
+              <p className="text-gray-600 mb-6">
+                {user?.role === 'seller'
+                  ? 'No customer orders have been placed yet.'
+                  : 'Start browsing our collection to place your first order!'}
+              </p>
               <button
-                onClick={() => navigate('/customer-dashboard')}
+                onClick={() =>
+                  navigate(user?.role === 'seller' ? '/seller-dashboard' : '/customer-dashboard')
+                }
                 className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition duration-300"
               >
-                Browse Books
+                {user?.role === 'seller' ? 'Back to dashboard' : 'Browse Books'}
               </button>
             </div>
           ) : (

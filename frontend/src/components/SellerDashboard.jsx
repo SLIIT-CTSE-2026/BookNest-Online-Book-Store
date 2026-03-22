@@ -117,7 +117,14 @@ export default function SellerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg p-6">
+            <button
+              type="button"
+              onClick={() => {
+                setEditingBook(null);
+                navigate('/orders');
+              }}
+              className="bg-white overflow-hidden shadow rounded-lg p-6 text-left hover:shadow-lg transition-shadow w-full"
+            >
               <div className="flex items-center">
                 <div className="shrink-0">
                   <div className="text-3xl">📦</div>
@@ -127,7 +134,7 @@ export default function SellerDashboard() {
                   <p className="text-gray-600">Manage customer orders</p>
                 </div>
               </div>
-            </div>
+            </button>
 
             <div className="bg-white overflow-hidden shadow rounded-lg p-6">
               <div className="flex items-center">
