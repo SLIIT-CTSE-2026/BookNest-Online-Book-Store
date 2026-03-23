@@ -186,6 +186,9 @@ export const updateOrderStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status, notes } = req.body;
 
+    console.log('Updating order:', orderId);
+    console.log('Request body:', req.body);
+
     // Validate status
     const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
     if (status && !validStatuses.includes(status)) {
@@ -195,15 +198,18 @@ export const updateOrderStatus = async (req, res) => {
       });
     }
 
-    // Find the order
-    const order = await Order.findOne({ orderId });
+    // Find the order by orderId field (not _id)
+    const order = await Order.findOne({ orderId: req.params.orderId });
 
     if (!order) {
+      console.log('Order not found with orderId:', req.params.orderId);
       return res.status(404).json({
         success: false,
         message: 'Order not found'
       });
     }
+
+    console.log('Order found:', order._id, 'with orderId:', order.orderId);
 
     if (!canAccessOrder(req, order)) {
       return res.status(403).json({
@@ -229,6 +235,8 @@ export const updateOrderStatus = async (req, res) => {
 
     await order.save();
 
+    console.log('Order updated successfully');
+
     res.status(200).json({
       success: true,
       message: 'Order updated successfully',
@@ -236,6 +244,135 @@ export const updateOrderStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Update order error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating order',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Update order (full edit)
+ * @route PUT /api/orders/:orderId
+ * @access Private
+ */
+export const updateOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { shippingAddress, paymentMethod, notes, items } = req.body;
+
+    console.log('Full update order:', orderId);
+    console.log('Request body:', req.body);
+
+    // Find the order
+    const order = await Order.findOne({ orderId });
+
+    if (!order) {
+      console.log('Order not found with orderId:', orderId);
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    console.log('Order found:', order._id, 'with orderId:', order.orderId);
+
+    if (!canAccessOrder(req, order)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied for this order'
+      });
+    }
+
+    // Validate and update fields
+    if (shippingAddress) {
+      if (typeof shippingAddress !== 'string' || shippingAddress.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Shipping address must be a non-empty string'
+        });
+      }
+      order.shippingAddress = shippingAddress.trim();
+    }
+
+    if (paymentMethod) {
+      const validPaymentMethods = ['card', 'cash', 'online'];
+      if (!validPaymentMethods.includes(paymentMethod)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid payment method. Must be one of: ${validPaymentMethods.join(', ')}`
+        });
+      }
+      order.paymentMethod = paymentMethod;
+    }
+
+    if (notes !== undefined) {
+      if (notes.length > 500) {
+        return res.status(400).json({
+          success: false,
+          message: 'Notes cannot exceed 500 characters'
+        });
+      }
+      order.notes = notes;
+    }
+
+    // Update items if provided
+    if (items && Array.isArray(items)) {
+      if (items.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Order must have at least one item'
+        });
+      }
+
+      // Validate each item
+      const validatedItems = [];
+      for (const item of items) {
+        if (!item.productId || !item.productName || !item.quantity || !item.price) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid item details for product: ${item.productName || 'Unknown'}`
+          });
+        }
+
+        if (item.quantity < 1) {
+          return res.status(400).json({
+            success: false,
+            message: `Quantity must be at least 1 for product: ${item.productName}`
+          });
+        }
+
+        if (item.price < 0) {
+          return res.status(400).json({
+            success: false,
+            message: `Price cannot be negative for product: ${item.productName}`
+          });
+        }
+
+        validatedItems.push({
+          productId: item.productId,
+          productName: item.productName,
+          quantity: parseInt(item.quantity),
+          price: parseFloat(item.price)
+        });
+      }
+
+      order.items = validatedItems;
+      // totalAmount will be auto-calculated by the schema pre-save hook
+    }
+
+    await order.save();
+
+    console.log('Order fully updated successfully');
+
+    res.status(200).json({
+      success: true,
+      message: 'Order updated successfully',
+      data: order
+    });
+  } catch (error) {
+    console.error('Full update order error:', error.message);
     res.status(500).json({
       success: false,
       message: 'Error updating order',

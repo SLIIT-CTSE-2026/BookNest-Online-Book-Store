@@ -7,6 +7,7 @@ export default function OrderList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [deletingOrderId, setDeletingOrderId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -50,6 +51,38 @@ export default function OrderList() {
 
   const handleViewOrder = (orderId) => {
     navigate(`/order-details/${orderId}`);
+  };
+
+  const handleEditOrder = (orderId) => {
+    navigate(`/order-details/${orderId}`);
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeletingOrderId(orderId);
+      const response = await api.delete(`/orders/${orderId}`);
+      
+      if (response.data.success) {
+        setOrders(orders.filter(order => order.orderId !== orderId));
+        alert('Order deleted successfully!');
+      }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      alert(err.response?.data?.message || 'Failed to delete order');
+    } finally {
+      setDeletingOrderId(null);
+    }
+  };
+
+  const canModifyOrder = (order) => {
+    // Only allow modification if user is admin, seller, or the order belongs to the customer
+    if (user?.role === 'admin' || user?.role === 'seller') return true;
+    if (user?.role === 'customer' && order.customerId === user?.userId) return true;
+    return false;
   };
 
   const getStatusColor = (status) => {
@@ -171,6 +204,31 @@ export default function OrderList() {
                         📍 {order.shippingAddress}
                       </p>
                     </div>
+
+                    {/* Action Buttons */}
+                    {canModifyOrder(order) && (
+                      <div className="border-t pt-4 mt-4 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditOrder(order.orderId);
+                          }}
+                          className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm py-2 px-3 rounded transition duration-300"
+                        >
+                          Edit / View
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteOrder(order.orderId);
+                          }}
+                          disabled={deletingOrderId === order.orderId}
+                          className="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm py-2 px-3 rounded transition duration-300"
+                        >
+                          {deletingOrderId === order.orderId ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

@@ -3,6 +3,7 @@ import {
   getOrders,
   createOrder,
   updateOrderStatus,
+  updateOrder,
   getOrderById,
   deleteOrder,
   getOrdersByCustomerId,
@@ -73,6 +74,13 @@ router.post('/', createOrder);
  * @access  Private
  */
 router.patch('/:orderId', updateOrderStatus);
+
+/**
+ * @route   PUT /api/orders/:orderId
+ * @desc    Update order (full edit)
+ * @access  Private
+ */
+router.put('/:orderId', updateOrder);
 
 /**
  * @route   GET /api/orders/:orderId
