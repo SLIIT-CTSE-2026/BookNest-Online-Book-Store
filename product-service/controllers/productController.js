@@ -95,6 +95,28 @@ exports.getProductById = async (req, res) => {
   }
 };
 
+// Get product by productId (user-friendly ID)
+exports.getProductByProductId = async (req, res) => {
+  try {
+    const product = await Product.findOne({ productId: req.params.productId });
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+    res.status(200).json({
+      success: true,
+      product
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // Get products by seller
 exports.getProductsBySeller = async (req, res) => {
   try {
@@ -115,17 +137,34 @@ exports.getProductsBySeller = async (req, res) => {
 // Update product
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!product) {
+    // Find the product first to check ownership
+    const existingProduct = await Product.findById(req.params.id);
+    
+    if (!existingProduct) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
       });
     }
+
+    // Check if user is authorized to update this product
+    // req.user is set by authenticateToken middleware
+    if (req.user && req.user.role !== 'admin') {
+      // Sellers can only update their own products
+      if (existingProduct.sellerId !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only update your own products.'
+        });
+      }
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    
     res.status(200).json({
       success: true,
       message: 'Product updated successfully',
@@ -139,20 +178,34 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Delete product (soft delete)
+// Delete product (permanent delete)
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false },
-      { new: true }
-    );
-    if (!product) {
+    // Find the product first to check ownership
+    const existingProduct = await Product.findById(req.params.id);
+    
+    if (!existingProduct) {
       return res.status(404).json({
         success: false,
         message: 'Product not found'
       });
     }
+
+    // Check if user is authorized to delete this product
+    // req.user is set by authenticateToken middleware
+    if (req.user && req.user.role !== 'admin') {
+      // Sellers can only delete their own products
+      if (existingProduct.sellerId !== req.user.userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied. You can only delete your own products.'
+        });
+      }
+    }
+
+    // Permanently delete the product from the database
+    await Product.findByIdAndDelete(req.params.id);
+    
     res.status(200).json({
       success: true,
       message: 'Product deleted successfully'
@@ -203,8 +256,9 @@ exports.syncProductRatings = async (req, res) => {
       });
     }
 
-    const product = await Product.findByIdAndUpdate(
-      productId,
+    // Find product by user-friendly productId field (not MongoDB _id)
+    const product = await Product.findOneAndUpdate(
+      { productId: productId },
       {
         'ratings.average': Math.max(0, Math.min(5, normalizedAverage)),
         'ratings.count': Math.max(0, normalizedCount)

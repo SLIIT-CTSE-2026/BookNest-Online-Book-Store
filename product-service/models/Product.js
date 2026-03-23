@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+  productId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true
+  },
   title: {
     type: String,
     required: true,
@@ -74,10 +80,23 @@ const productSchema = new mongoose.Schema({
     default: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 // Index for search
 productSchema.index({ title: 'text', author: 'text', description: 'text' });
+
+// Pre-save hook to auto-generate productId if not provided
+productSchema.pre('save', async function(next) {
+  if (!this.productId) {
+    // Generate a user-friendly product ID: PROD-XXXXXXXX
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const randomCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+    this.productId = `PROD-${timestamp}-${randomCode}`;
+  }
+  next();
+});
 
 module.exports = mongoose.model('Product', productSchema);

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import api, { productAPI } from '../utils/api';
 
 export default function CreateOrder() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [formData, setFormData] = useState({
     customerId: '',
     customerName: '',
@@ -37,7 +39,22 @@ export default function CreateOrder() {
         customerEmail: parsedUser.email
       }));
     }
+
+    // Fetch available products
+    fetchProducts();
   }, [navigate]);
+
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const response = await productAPI.getAllProducts();
+      setProducts(response.data.products || []);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   const handleAddItem = () => {
     setFormData(prev => ({
@@ -60,12 +77,30 @@ export default function CreateOrder() {
   const handleItemChange = (index, field, value) => {
     setFormData(prev => ({
       ...prev,
-      items: prev.items.map((item, i) => ({
-        ...item,
-        ...(i === index ? {
+      items: prev.items.map((item, i) => {
+        if (i !== index) return item;
+        
+        // If selecting a product, auto-fill product details
+        if (field === 'productSelection') {
+          if (!value) {
+            return { productId: '', productName: '', quantity: 1, price: 0 };
+          }
+          const selectedProduct = products.find(p => p._id === value);
+          if (selectedProduct) {
+            return {
+              productId: selectedProduct.productId || selectedProduct._id,
+              productName: selectedProduct.title,
+              quantity: 1,
+              price: selectedProduct.price
+            };
+          }
+        }
+        
+        return {
+          ...item,
           [field]: field === 'quantity' || field === 'price' ? parseFloat(value) || 0 : value
-        } : {})
-      }))
+        };
+      })
     }));
   };
 
@@ -227,31 +262,30 @@ export default function CreateOrder() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Product Name *
+                        Select Product *
                       </label>
-                      <input
-                        type="text"
-                        value={item.productName}
-                        onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
+                      <select
+                        value={products.find(p => (p.productId || p._id) === item.productId)?._id || ''}
+                        onChange={(e) => handleItemChange(index, 'productSelection', e.target.value)}
                         required
+                        disabled={loadingProducts}
                         className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Enter product name"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Product ID *
-                      </label>
-                      <input
-                        type="text"
-                        value={item.productId}
-                        onChange={(e) => handleItemChange(index, 'productId', e.target.value)}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Enter product ID"
-                      />
+                      >
+                        <option value="">
+                          {loadingProducts ? 'Loading products...' : 'Select a product'}
+                        </option>
+                        {products.filter(p => p.stock > 0).map((product) => (
+                          <option key={product._id} value={product._id}>
+                            {product.title} by {product.author} - ${product.price.toFixed(2)} 
+                            (ID: {product.productId || product._id}) - {product.stock} in stock
+                          </option>
+                        ))}
+                      </select>
+                      {products.filter(p => p.stock > 0).length === 0 && !loadingProducts && (
+                        <p className="text-sm text-red-600 mt-1">No products available in stock</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -275,11 +309,24 @@ export default function CreateOrder() {
                         min="0"
                         step="0.01"
                         value={item.price}
-                        onChange={(e) => handleItemChange(index, 'price', e.target.value)}
-                        required
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        readOnly
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-100 text-gray-600"
                       />
+                      <p className="text-xs text-gray-500 mt-1">Auto-filled from product</p>
                     </div>
+                    {item.productId && (
+                      <div className="md:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Product ID
+                        </label>
+                        <p className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded border">
+                          {item.productId}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          This ID will be used for feedback and tracking
+                        </p>
+                      </div>
+                    )}
                     <div className="md:col-span-2 flex items-end">
                       <div className="text-sm text-gray-600">
                         Subtotal: <span className="font-semibold text-gray-900">
