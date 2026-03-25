@@ -32,8 +32,6 @@ export const feedbackAPI = {
   remove: (feedbackId) => api.delete(`/feedback/${feedbackId}`),
 };
 
-
-
 export const productAPI = {
   createProduct: (productData) => api.post('/products', productData),
   getAllProducts: () => api.get('/products'),
@@ -61,6 +59,14 @@ export const orderAPI = {
   // Integration endpoints
   getCustomerDetails: (customerId) => api.get(`/orders/customer-details/${customerId}`),
   getProductDetails: (productId) => api.get(`/orders/product-details/${productId}`),
+};
+
+export const customerAPI = {
+  getCustomerById: (customerId) => api.get(`/customers/${customerId}`),
+};
+
+export const sellerAPI = {
+  getSellerById: (sellerId) => api.get(`/sellers/${sellerId}`),
 };
 
 export default api;
