@@ -5,28 +5,26 @@ import CustomerOrders from './CustomerOrders';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function SellerDashboard() {
-  const [user, setUser] = useState(null);
+  const [user] = useState(() => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  });
   const [activeView, setActiveView] = useState('dashboard');
   const [editingBook, setEditingBook] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (!token || !userData) {
+
+    if (!token || !user) {
       navigate('/login');
       return;
     }
 
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== 'seller') {
+    if (user.role !== 'seller') {
       navigate('/login');
-      return;
     }
-
-    setUser(parsedUser);
-  }, [navigate]);
+  }, [navigate, user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');

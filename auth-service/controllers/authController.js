@@ -32,7 +32,6 @@ const createCustomerProfile = async (user) => {
       }
     });
     
-    console.log('Customer profile created:', response.data);
   } catch (error) {
     console.error('Error creating customer profile:', error.message);
     if (error.response) {
@@ -63,7 +62,6 @@ const createSellerProfile = async (user) => {
       }
     });
     
-    console.log('Seller profile created:', response.data);
   } catch (error) {
     console.error('Error creating seller profile:', error.message);
     if (error.response) {
