@@ -11,7 +11,7 @@ import orderRoutes from './routes/orderRoutes.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5004;
+const PORT = process.env.PORT;
 
 // Security middleware
 app.use(helmet()); // Set security HTTP headers

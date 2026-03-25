@@ -2,15 +2,15 @@ import Order from '../models/Order.js';
 import axios from 'axios';
 
 // Service URLs - These should be configured in environment variables
-const CUSTOMER_SERVICE_URL = process.env.CUSTOMER_SERVICE_URL || 'http://localhost:5002';
-const SELLER_SERVICE_URL = process.env.SELLER_SERVICE_URL || 'http://localhost:5003';
+const CUSTOMER_SERVICE_URL = process.env.CUSTOMER_SERVICE_UR;
+const SELLER_SERVICE_URL = process.env.SELLER_SERVICE_URL;
 
 const fetchCustomerById = async (customerId) => {
   const trimmedBase = (CUSTOMER_SERVICE_URL || '').replace(/\/$/, '');
   const candidates = [
     `${trimmedBase}/${customerId}`,
     `${trimmedBase}/api/customers/${customerId}`,
-    `http://localhost:5002/api/customers/${customerId}`
+    `http://${CUSTOMER_SERVICE_URL}/api/customers/${customerId}`
   ];
 
   let lastError;

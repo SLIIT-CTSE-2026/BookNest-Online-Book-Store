@@ -16,7 +16,7 @@ const authenticateToken = async (req, res, next) => {
     }
 
     // Verify token with auth service
-    const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:5001';
+    const authServiceUrl = process.env.AUTH_SERVICE_URL;
     const response = await axios.post(`${authServiceUrl}/verify-token`, {}, {
       headers: {
         Authorization: `Bearer ${token}`
