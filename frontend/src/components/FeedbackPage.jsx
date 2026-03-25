@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { feedbackAPI, orderAPI } from '../utils/api';
+import { feedbackAPI } from '../utils/api';
 
 const initialForm = {
   orderId: '',
@@ -13,9 +13,9 @@ export default function FeedbackPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
-  const [customerOrders, setCustomerOrders] = useState([]);
+  const [customerOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingOrderOptions, setLoadingOrderOptions] = useState(false);
+  const [loadingOrderOptions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [searchOrderId, setSearchOrderId] = useState('');
@@ -40,7 +40,7 @@ export default function FeedbackPage() {
     } finally {
       setLoading(false);
     }
-  }, [feedbackAPI, clearAlerts]);
+  }, [clearAlerts]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -67,10 +67,10 @@ export default function FeedbackPage() {
     return `Average rating: ${(total / items.length).toFixed(1)} / 5`;
   }, [items]);
 
-  const clearAlerts = () => {
+  const clearAlerts = useCallback(() => {
     setError('');
     setMessage('');
-  };
+  }, []);
 
   const orderOptions = useMemo(
     () => customerOrders.filter((order) => order?.orderId),
