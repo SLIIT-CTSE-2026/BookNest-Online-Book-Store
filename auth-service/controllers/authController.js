@@ -13,7 +13,7 @@ const generateToken = (userId, role) => {
 // Create customer profile in customer service
 const createCustomerProfile = async (user) => {
   try {
-    const customerServiceUrl = process.env.CUSTOMER_SERVICE_URL || 'http://customer-service:5002';
+    const customerServiceUrl = process.env.CUSTOMER_SERVICE_URL;
     
     const customerData = {
       userId: user.userId,
@@ -44,7 +44,7 @@ const createCustomerProfile = async (user) => {
 // Create seller profile in seller service
 const createSellerProfile = async (user) => {
   try {
-    const sellerServiceUrl = process.env.SELLER_SERVICE_URL || 'http://seller-service:5003';
+    const sellerServiceUrl = process.env.SELLER_SERVICE_URL;
 
     const sellerData = {
       userId: user.userId,
@@ -69,8 +69,6 @@ const createSellerProfile = async (user) => {
     if (error.response) {
       console.error('Response data:', error.response.data);
     }
-    // Don't fail the registration if profile creation fails
-    // This can be handled asynchronously or retried later
   }
 };
 
