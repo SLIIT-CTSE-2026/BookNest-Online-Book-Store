@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { feedbackAPI, orderAPI } from '../utils/api';
 
@@ -42,7 +42,7 @@ export default function FeedbackPage() {
 
     setUser(parsedUser);
     loadFeedback();
-}, [navigate, loadFeedback]);
+  }, [navigate, loadFeedback]);
 
   const ratingSummary = useMemo(() => {
     if (!items.length) return 'No ratings yet';
@@ -120,7 +120,7 @@ export default function FeedbackPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   const loadCustomerOrders = async () => {
     setLoadingOrderOptions(true);

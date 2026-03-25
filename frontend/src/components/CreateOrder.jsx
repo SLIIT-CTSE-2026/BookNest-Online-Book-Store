@@ -4,7 +4,7 @@ import api, { productAPI } from '../utils/api';
 
 export default function CreateOrder() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
