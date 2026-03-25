@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { feedbackAPI, orderAPI } from '../utils/api';
 
@@ -24,6 +24,23 @@ export default function FeedbackPage() {
   const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState('');
   const [editData, setEditData] = useState({ rating: '5', comment: '' });
+
+  const loadFeedback = useCallback(async (orderId = '', productId = '') => {
+    setLoading(true);
+    clearAlerts();
+    try {
+      const params = {};
+      if (orderId) params.orderId = orderId;
+      if (productId) params.productId = productId;
+      const response = await feedbackAPI.listMine(params);
+      const feedbackItems = response.data?.data?.feedback || [];
+      setItems(feedbackItems);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load feedback');
+    } finally {
+      setLoading(false);
+    }
+  }, [feedbackAPI, clearAlerts]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -104,36 +121,6 @@ export default function FeedbackPage() {
 
     return Array.from(uniqueProducts.values());
   }, [searchOrderId, productOptionsByOrder]);
-
-  const loadFeedback = async (orderId = '', productId = '') => {
-    setLoading(true);
-    clearAlerts();
-    try {
-      const params = {};
-      if (orderId) params.orderId = orderId;
-      if (productId) params.productId = productId;
-      const response = await feedbackAPI.listMine(params);
-      const feedbackItems = response.data?.data?.feedback || [];
-      setItems(feedbackItems);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load feedback');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadCustomerOrders = async () => {
-    setLoadingOrderOptions(true);
-    try {
-      const response = await orderAPI.getOrders();
-      const orders = response.data?.data || [];
-      setCustomerOrders(Array.isArray(orders) ? orders : []);
-    } catch (err) {
-      setError((prev) => prev || err.response?.data?.message || 'Failed to load your orders for feedback selection');
-    } finally {
-      setLoadingOrderOptions(false);
-    }
-  };
 
   const handleCreate = async (e) => {
     e.preventDefault();
