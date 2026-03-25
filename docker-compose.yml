@@ -1,0 +1,138 @@
+services:
+  customer-service:
+    build:
+      context: ./customer-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_CUSTOMER_SERVICE_PORT}:${EXTERNAL_CUSTOMER_SERVICE_PORT}"
+    container_name: customer-service
+    environment:
+      - PORT=${EXTERNAL_CUSTOMER_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - MONGO_URI=${CUSTOMER_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - booknest-network
+
+  seller-service:
+    build:
+      context: ./seller-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_SELLER_SERVICE_PORT}:${EXTERNAL_SELLER_SERVICE_PORT}"
+    container_name: seller-service
+    environment:
+      - PORT=${EXTERNAL_SELLER_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - MONGO_URI=${SELLER_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - booknest-network
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_PRODUCT_SERVICE_PORT}:${EXTERNAL_PRODUCT_SERVICE_PORT}"
+    container_name: product-service
+    environment:
+      - PORT=${EXTERNAL_PRODUCT_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+      - FEEDBACK_SERVICE_URL=${FEEDBACK_SERVICE_URL}
+      - MONGO_URI=${SELLER_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - booknest-network  
+
+  feedback-service:
+    build:
+      context: ./feedback-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_FEEDBACK_SERVICE_PORT}:${EXTERNAL_FEEDBACK_SERVICE_PORT}"
+    container_name: feedback-service
+    environment:
+      - PORT=${EXTERNAL_FEEDBACK_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL}
+      - MONGO_URI=${FEEDBACK_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - booknest-network
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_ORDER_SERVICE_PORT}:${EXTERNAL_ORDER_SERVICE_PORT}"
+    container_name: order-service
+    environment:
+      - PORT=${EXTERNAL_ORDER_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
+      - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+      - MONGO_URI=${ORDER_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - NODE_ENV=${NODE_ENV}
+    networks:
+      - booknest-network
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_AUTH_SERVICE_PORT}:${EXTERNAL_AUTH_SERVICE_PORT}"
+    container_name: auth-service
+    environment:
+      - PORT=${EXTERNAL_AUTH_SERVICE_PORT}
+      - MONGO_URI=${AUTH_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
+      - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+    depends_on:
+      - customer-service
+      - seller-service    
+    networks:
+      - booknest-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_API_GATEWAY_PORT}:${EXTERNAL_API_GATEWAY_PORT}"
+    container_name: api-gateway
+    environment:
+      - PORT=${EXTERNAL_API_GATEWAY_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
+      - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+    depends_on:
+      - customer-service
+      - seller-service
+      - auth-service
+    networks:
+      - booknest-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_FRONTEND_PORT}:80"
+    container_name: frontend
+    depends_on:
+      - api-gateway
+    networks:
+      - booknest-network
+
+networks:
+  booknest-network:
+    driver: bridge
