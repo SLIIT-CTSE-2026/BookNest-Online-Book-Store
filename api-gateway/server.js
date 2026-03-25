@@ -49,7 +49,7 @@ app.use(
   authenticateToken,
   authorizeRole('seller', 'customer'),
   createProxyMiddleware({
-    target: process.env.PRODUCT_SERVICE_URL || 'http://localhost:5004',
+    target: process.env.PRODUCT_SERVICE_URL,
     changeOrigin: true,
     onProxyReq: (proxyReq, req, res) => {
       console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to SELLER SERVICE`);
@@ -63,7 +63,7 @@ app.use(
 app.use('/api/feedback',
   authenticateToken,
   createProxyMiddleware({
-    target: `${process.env.FEEDBACK_SERVICE_URL || 'http://localhost:5007'}/api/feedback`,
+    target: `${process.env.FEEDBACK_SERVICE_URL}/api/feedback`,
     changeOrigin: true,
     onProxyReq: (proxyReq, req, res) => {
       console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to FEEDBACK SERVICE`);
@@ -78,15 +78,13 @@ app.use('/api/orders',
   authenticateToken,
   authorizeRole('customer', 'seller', 'admin'),
   createProxyMiddleware({
-    target: process.env.ORDER_SERVICE_URL || 'http://localhost:5005',
+    target: process.env.ORDER_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: (path) => `/api/orders${path}`,
   })
 );
 
-
-
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 app.listen(PORT, () => {
   console.log(`API Gateway running on port ${PORT}`);
 });
