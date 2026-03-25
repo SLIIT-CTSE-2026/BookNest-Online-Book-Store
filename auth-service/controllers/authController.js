@@ -22,14 +22,14 @@ const createCustomerProfile = async (user) => {
       role: user.role,
       createDate: user.createDate
     };
-    
-    const response = await axios.post(`${customerServiceUrl}/`, customerData, {
+
+    console.log('Creating customer profile at:', `${customerServiceUrl}/api/customers/profile`);
+
+    const response = await axios.post(`${customerServiceUrl}/api/customers/profile`, customerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
       }
-    await axios.post(`${customerServiceUrl}/api/customers/profile`, customerData, {
-      timeout: 5000
     });
     
   } catch (error) {
@@ -53,14 +53,13 @@ const createSellerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    const response = await axios.post(`${sellerServiceUrl}/`, sellerData, {
+    console.log('Creating seller profile at:', `${sellerServiceUrl}/api/sellers/profile`);
+
+    const response = await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
       }
-    // Make direct API call to seller service to create profile
-    await axios.post(`${sellerServiceUrl}/api/sellers/profile`, sellerData, {
-      timeout: 5000
     });
     
   } catch (error) {
@@ -68,8 +67,6 @@ const createSellerProfile = async (user) => {
     if (error.response) {
       console.error('Response data:', error.response.data);
     }
-    // Don't fail the registration if profile creation fails
-    // This can be handled asynchronously or retried later
   }
 };
 

@@ -60,7 +60,24 @@ export default function CustomerDashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+      <div 
+        className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+        onClick={() => navigate('/create-order')}
+      >
+        <div className="p-6">
+          <div className="flex items-center">
+            <div>
+              <div className="text-3xl">➕</div>
+            </div>
+            <div className="ml-5">
+              <h3 className="text-lg font-medium text-gray-900">Create Order</h3>
+              <p className="text-gray-600">Place a new book order</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300">   
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -88,10 +105,27 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div
-              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-              onClick={() => navigate(`/customer-profile/${user.userId}`)}
-            >
+<div 
+  className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+  onClick={() => navigate('/orders')}
+>
+  <div className="p-6">
+    <div className="flex items-center">
+      <div>
+        <div className="text-3xl">📦</div>
+      </div>
+      <div className="ml-5">
+        <h3 className="text-lg font-medium text-gray-900">View All Orders</h3>
+        <p className="text-gray-600">Manage and track orders</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div 
+  className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+  onClick={() => navigate(`/customer-profile/${user.userId}`)}
+>
               <div className="p-6">
                 <div className="flex items-center">
                   <div>

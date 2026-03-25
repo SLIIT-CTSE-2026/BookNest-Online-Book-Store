@@ -166,6 +166,19 @@ export default function AddBookPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Seller ID
+                </label>
+                <input
+                  type="text"
+                  value={user?.userId || ''}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+                />
+                <p className="text-xs text-gray-500 mt-1">Auto-filled from your account</p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Title <span className="text-red-500">*</span>

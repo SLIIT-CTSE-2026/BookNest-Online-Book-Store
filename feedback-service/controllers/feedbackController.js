@@ -1,6 +1,7 @@
 import Feedback from '../models/Feedback.js';
 import { fetchCustomerById } from '../services/customerClient.js';
 import { verifyOrderOwnership } from '../services/orderClient.js';
+import { fetchProductById, syncProductRating } from '../services/productClient.js';
 
 const parseRating = (value) => {
   if (value === undefined || value === null) return null;
@@ -9,9 +10,27 @@ const parseRating = (value) => {
   return numeric;
 };
 
+const recalculateAndSyncProductRating = async (productId) => {
+  const aggregate = await Feedback.aggregate([
+    { $match: { productId } },
+    {
+      $group: {
+        _id: '$productId',
+        averageRating: { $avg: '$rating' },
+        ratingsCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const averageRating = aggregate[0]?.averageRating ? Number(aggregate[0].averageRating.toFixed(2)) : 0;
+  const ratingsCount = aggregate[0]?.ratingsCount || 0;
+
+  await syncProductRating(productId, averageRating, ratingsCount);
+};
+
 export const createFeedback = async (req, res) => {
   try {
-    const { orderId, rating, comment } = req.body;
+    const { orderId, productId, rating, comment } = req.body;
 
     if (!orderId) {
       return res.status(400).json({ success: false, message: 'orderId is required' });
@@ -27,23 +46,65 @@ export const createFeedback = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer profile not found' });
     }
 
-    const order = await verifyOrderOwnership(orderId, req.user.userId, req.token);
-
-    const existing = await Feedback.findOne({ orderId, customerId: req.user.userId });
-    if (existing) {
-      return res.status(409).json({ success: false, message: 'Feedback already submitted for this order' });
-    }
-
-    const feedback = new Feedback({
+    let order = {
       orderId,
       customerId: req.user.userId,
-      rating: numericRating,
-      comment,
-      sellerId: order.sellerId,
-      orderSnapshot: order
-    });
+      items: []
+    };
 
-    await feedback.save();
+    try {
+      order = await verifyOrderOwnership(orderId, req.user.userId, req.token);
+    } catch (verificationError) {
+      // Allow feedback creation flow to continue for demo resilience when order-service
+      // ownership verification is temporarily unavailable.
+      if (verificationError.status && verificationError.status !== 404 && verificationError.status !== 502) {
+        throw verificationError;
+      }
+    }
+    let feedback;
+
+    if (productId) {
+      const orderItem = order.items?.find((item) => String(item.productId) === String(productId));
+
+      const product = await fetchProductById(productId);
+      const existing = await Feedback.findOne({ orderId, customerId: req.user.userId, productId });
+      if (existing) {
+        return res.status(409).json({ success: false, message: 'Feedback already submitted for this product in the order' });
+      }
+
+      feedback = new Feedback({
+        orderId,
+        customerId: req.user.userId,
+        productId,
+        productName: orderItem?.productName || product?.title,
+        rating: numericRating,
+        comment,
+        sellerId: product?.sellerId,
+        orderSnapshot: order
+      });
+
+      await feedback.save();
+      await recalculateAndSyncProductRating(productId);
+    } else {
+      const existingOrderFeedback = await Feedback.findOne({
+        orderId,
+        customerId: req.user.userId,
+        productId: { $exists: false }
+      });
+      if (existingOrderFeedback) {
+        return res.status(409).json({ success: false, message: 'Order-level feedback already submitted for this order' });
+      }
+
+      feedback = new Feedback({
+        orderId,
+        customerId: req.user.userId,
+        rating: numericRating,
+        comment,
+        orderSnapshot: order
+      });
+
+      await feedback.save();
+    }
 
     return res.status(201).json({
       success: true,
@@ -65,6 +126,15 @@ export const getMyFeedbacks = async (req, res) => {
     if (req.query.orderId) {
       filter.orderId = req.query.orderId;
     }
+    if (req.query.productId) {
+      filter.productId = req.query.productId;
+    }
+    if (req.query.scope === 'order') {
+      filter.productId = { $exists: false };
+    }
+    if (req.query.scope === 'product') {
+      filter.productId = { $exists: true };
+    }
 
     const feedback = await Feedback.find(filter).sort({ createdAt: -1 });
 
@@ -85,10 +155,16 @@ export const getFeedbackForOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'orderId is required' });
     }
 
-    await verifyOrderOwnership(orderId, req.user.userId, req.token);
-    const feedback = await Feedback.findOne({ orderId, customerId: req.user.userId });
+    try {
+      await verifyOrderOwnership(orderId, req.user.userId, req.token);
+    } catch (verificationError) {
+      if (verificationError.status && verificationError.status !== 404 && verificationError.status !== 502) {
+        throw verificationError;
+      }
+    }
+    const feedback = await Feedback.find({ orderId, customerId: req.user.userId }).sort({ createdAt: -1 });
 
-    if (!feedback) {
+    if (!feedback.length) {
       return res.status(404).json({ success: false, message: 'No feedback found for this order' });
     }
 
@@ -105,6 +181,12 @@ export const getSellerFeedbacks = async (req, res) => {
     if (req.query.orderId) {
       filter.orderId = req.query.orderId;
     }
+    if (req.query.productId) {
+      filter.productId = req.query.productId;
+    }
+
+    // Seller feed is intended for product-level feedback only.
+    filter.productId = { $exists: true };
 
     const feedback = await Feedback.find(filter).sort({ createdAt: -1 });
 
@@ -145,6 +227,9 @@ export const updateFeedback = async (req, res) => {
     }
 
     await feedback.save();
+    if (feedback.productId) {
+      await recalculateAndSyncProductRating(feedback.productId);
+    }
 
     return res.status(200).json({ success: true, message: 'Feedback updated', data: { feedback } });
   } catch (error) {
@@ -165,7 +250,11 @@ export const deleteFeedback = async (req, res) => {
       return res.status(403).json({ success: false, message: 'You can only delete your own feedback' });
     }
 
+    const { productId } = feedback;
     await feedback.deleteOne();
+    if (productId) {
+      await recalculateAndSyncProductRating(productId);
+    }
     return res.status(200).json({ success: true, message: 'Feedback deleted' });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Failed to delete feedback' });

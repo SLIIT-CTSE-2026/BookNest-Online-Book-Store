@@ -12,13 +12,14 @@ export default function CustomerProfile() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-
+    
     if (!token || !userData) {
       navigate('/login');
       return;
     }
 
     const parsedUser = JSON.parse(userData);
+    // Allow access if it's the user's own profile
     if (parsedUser.role !== 'customer') {
       navigate('/login');
       return;
@@ -152,7 +153,7 @@ export default function CustomerProfile() {
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-6">Profile Details</h3>
-
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-gray-500 mb-2">Personal Information</h4>

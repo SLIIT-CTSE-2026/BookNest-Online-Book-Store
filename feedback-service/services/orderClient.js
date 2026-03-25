@@ -10,12 +10,12 @@ export const verifyOrderOwnership = async (orderId, customerId, token) => {
   }
 
   try {
-    const response = await axios.get(`${orderServiceUrl}/api/orders/${orderId}`, {
+    const response = await axios.get(`${orderServiceUrl}/api/orders/customer/${customerId}/order/${orderId}`, {
       headers: { Authorization: `Bearer ${token}` },
       timeout: 5000
     });
 
-    const order = response.data?.data?.order || response.data?.order;
+    const order = response.data?.data;
     if (!order) {
       const err = new Error('Order not found');
       err.status = 404;

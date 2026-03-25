@@ -13,6 +13,15 @@ const feedbackSchema = new mongoose.Schema({
     trim: true,
     index: true
   },
+  productId: {
+    type: String,
+    trim: true,
+    index: true
+  },
+  productName: {
+    type: String,
+    trim: true
+  },
   rating: {
     type: Number,
     required: [true, 'rating is required'],
@@ -36,7 +45,15 @@ const feedbackSchema = new mongoose.Schema({
   timestamps: true
 });
 
-feedbackSchema.index({ orderId: 1, customerId: 1 }, { unique: true });
+feedbackSchema.index({ sellerId: 1, createdAt: -1 });
+feedbackSchema.index({ productId: 1, createdAt: -1 });
+feedbackSchema.index(
+  { orderId: 1, customerId: 1, productId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { productId: { $exists: true, $type: 'string' } }
+  }
+);
 
 const Feedback = mongoose.model('Feedback', feedbackSchema);
 export default Feedback;

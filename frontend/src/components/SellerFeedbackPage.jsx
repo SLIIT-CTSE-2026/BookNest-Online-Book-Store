@@ -8,6 +8,7 @@ export default function SellerFeedbackPage() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchOrderId, setSearchOrderId] = useState('');
+  const [searchProductId, setSearchProductId] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -35,11 +36,13 @@ export default function SellerFeedbackPage() {
     return `Average customer rating: ${(total / items.length).toFixed(1)} / 5`;
   }, [items]);
 
-  const loadFeedback = async (orderId = '') => {
+  const loadFeedback = async (orderId = '', productId = '') => {
     setLoading(true);
     setError('');
     try {
-      const params = orderId ? { orderId } : {};
+      const params = {};
+      if (orderId) params.orderId = orderId;
+      if (productId) params.productId = productId;
       const response = await feedbackAPI.listForSeller(params);
       setItems(response.data?.data?.feedback || []);
     } catch (err) {
@@ -51,12 +54,13 @@ export default function SellerFeedbackPage() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    await loadFeedback(searchOrderId.trim());
+    await loadFeedback(searchOrderId.trim(), searchProductId.trim());
   };
 
   const handleReset = async () => {
     setSearchOrderId('');
-    await loadFeedback('');
+    setSearchProductId('');
+    await loadFeedback('', '');
   };
 
   const handleLogout = () => {
@@ -97,7 +101,7 @@ export default function SellerFeedbackPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <section className="mb-6 bg-white rounded-2xl border border-amber-200 shadow-sm p-6">
           <h1 className="text-3xl font-bold text-slate-900">Customer Feedback</h1>
-          <p className="text-slate-600 mt-2">Review what customers said about your fulfilled orders.</p>
+          <p className="text-slate-600 mt-2">Review what customers said about each of your sold products.</p>
           <p className="text-sm text-orange-700 font-semibold mt-2">{ratingSummary}</p>
         </section>
 
@@ -117,6 +121,13 @@ export default function SellerFeedbackPage() {
                 onChange={(e) => setSearchOrderId(e.target.value)}
                 className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600"
                 placeholder="Filter by Order ID"
+              />
+              <input
+                type="text"
+                value={searchProductId}
+                onChange={(e) => setSearchProductId(e.target.value)}
+                className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-600"
+                placeholder="Filter by Product ID"
               />
               <button
                 type="submit"
@@ -148,6 +159,9 @@ export default function SellerFeedbackPage() {
                     <div>
                       <p className="text-sm text-slate-500">Order</p>
                       <p className="font-semibold text-slate-900">{item.orderId}</p>
+                      <p className="text-sm text-slate-500 mt-1">Product</p>
+                      <p className="font-semibold text-slate-900">{item.productName || item.productId}</p>
+                      <p className="text-xs text-slate-500">{item.productId}</p>
                     </div>
                     <div className="text-sm text-slate-500">
                       {new Date(item.updatedAt || item.createdAt).toLocaleString()}

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { feedbackAPI } from '../utils/api';
+import { feedbackAPI, orderAPI } from '../utils/api';
 
 const initialForm = {
   orderId: '',
+  productId: '',
   rating: '5',
   comment: ''
 };
@@ -12,14 +13,34 @@ export default function FeedbackPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
+  const [customerOrders, setCustomerOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingOrderOptions, setLoadingOrderOptions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState(initialForm);
   const [searchOrderId, setSearchOrderId] = useState('');
+  const [searchProductId, setSearchProductId] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState('');
   const [editData, setEditData] = useState({ rating: '5', comment: '' });
+
+  const loadFeedback = useCallback(async (orderId = '', productId = '') => {
+    setLoading(true);
+    clearAlerts();
+    try {
+      const params = {};
+      if (orderId) params.orderId = orderId;
+      if (productId) params.productId = productId;
+      const response = await feedbackAPI.listMine(params);
+      const feedbackItems = response.data?.data?.feedback || [];
+      setItems(feedbackItems);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load feedback');
+    } finally {
+      setLoading(false);
+    }
+  }, [feedbackAPI, clearAlerts]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -38,7 +59,7 @@ export default function FeedbackPage() {
 
     setUser(parsedUser);
     loadFeedback();
-}, [navigate, loadFeedback]);
+  }, [navigate, loadFeedback]);
 
   const ratingSummary = useMemo(() => {
     if (!items.length) return 'No ratings yet';
@@ -51,20 +72,55 @@ export default function FeedbackPage() {
     setMessage('');
   };
 
-  const loadFeedback = useCallback(async (orderId = '') => {
-    setLoading(true);
-    clearAlerts();
-    try {
-      const params = orderId ? { orderId } : {};
-      const response = await feedbackAPI.listMine(params);
-      const feedbackItems = response.data?.data?.feedback || [];
-      setItems(feedbackItems);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load feedback');
-    } finally {
-      setLoading(false);
+  const orderOptions = useMemo(
+    () => customerOrders.filter((order) => order?.orderId),
+    [customerOrders]
+  );
+
+  const productOptionsByOrder = useMemo(() => {
+    const productMap = new Map();
+
+    customerOrders.forEach((order) => {
+      const uniqueProducts = new Map();
+      (order.items || []).forEach((item) => {
+        if (!item?.productId) return;
+        if (!uniqueProducts.has(item.productId)) {
+          uniqueProducts.set(item.productId, {
+            productId: item.productId,
+            productName: item.productName || item.productId
+          });
+        }
+      });
+
+      if (order?.orderId) {
+        productMap.set(order.orderId, Array.from(uniqueProducts.values()));
+      }
+    });
+
+    return productMap;
+  }, [customerOrders]);
+
+  const submitProductOptions = useMemo(() => {
+    if (!formData.orderId) return [];
+    return productOptionsByOrder.get(formData.orderId) || [];
+  }, [formData.orderId, productOptionsByOrder]);
+
+  const searchProductOptions = useMemo(() => {
+    if (searchOrderId) {
+      return productOptionsByOrder.get(searchOrderId) || [];
     }
-  }, []);
+
+    const uniqueProducts = new Map();
+    productOptionsByOrder.forEach((products) => {
+      products.forEach((product) => {
+        if (!uniqueProducts.has(product.productId)) {
+          uniqueProducts.set(product.productId, product);
+        }
+      });
+    });
+
+    return Array.from(uniqueProducts.values());
+  }, [searchOrderId, productOptionsByOrder]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -74,13 +130,14 @@ export default function FeedbackPage() {
     try {
       await feedbackAPI.create({
         orderId: formData.orderId.trim(),
+        productId: formData.productId.trim(),
         rating: Number(formData.rating),
         comment: formData.comment.trim()
       });
 
       setMessage('Feedback submitted successfully.');
       setFormData(initialForm);
-      await loadFeedback(searchOrderId.trim());
+      await loadFeedback(searchOrderId.trim(), searchProductId.trim());
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create feedback');
     } finally {
@@ -111,7 +168,7 @@ export default function FeedbackPage() {
       });
       setMessage('Feedback updated successfully.');
       cancelEdit();
-      await loadFeedback(searchOrderId.trim());
+      await loadFeedback(searchOrderId.trim(), searchProductId.trim());
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update feedback');
     }
@@ -125,7 +182,7 @@ export default function FeedbackPage() {
     try {
       await feedbackAPI.remove(feedbackId);
       setMessage('Feedback deleted successfully.');
-      await loadFeedback(searchOrderId.trim());
+      await loadFeedback(searchOrderId.trim(), searchProductId.trim());
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete feedback');
     }
@@ -133,12 +190,22 @@ export default function FeedbackPage() {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    await loadFeedback(searchOrderId.trim());
+    await loadFeedback(searchOrderId, searchProductId);
   };
 
   const handleResetSearch = async () => {
     setSearchOrderId('');
-    await loadFeedback('');
+    setSearchProductId('');
+    await loadFeedback('', '');
+  };
+
+  const handleOrderSelectChange = (orderId) => {
+    setFormData((prev) => ({ ...prev, orderId, productId: '' }));
+  };
+
+  const handleSearchOrderChange = (orderId) => {
+    setSearchOrderId(orderId);
+    setSearchProductId('');
   };
 
   const handleLogout = () => {
@@ -179,7 +246,7 @@ export default function FeedbackPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <section className="mb-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
           <h1 className="text-3xl font-bold text-slate-900">My Feedback</h1>
-          <p className="text-slate-600 mt-2">Create and manage your feedback for completed orders.</p>
+          <p className="text-slate-600 mt-2">Create and manage feedback for each product in your completed orders.</p>
           <p className="text-sm text-cyan-700 font-semibold mt-2">{ratingSummary}</p>
         </section>
 
@@ -203,15 +270,50 @@ export default function FeedbackPage() {
                 <label htmlFor="orderId" className="block text-sm font-medium text-slate-700 mb-1">
                   Order ID
                 </label>
-                <input
+                <select
                   id="orderId"
-                  type="text"
                   value={formData.orderId}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, orderId: e.target.value }))}
+                  onChange={(e) => handleOrderSelectChange(e.target.value)}
                   required
+                  disabled={loadingOrderOptions || orderOptions.length === 0}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                  placeholder="e.g. ORDER-1001"
-                />
+                >
+                  <option value="">
+                    {loadingOrderOptions
+                      ? 'Loading your orders...'
+                      : orderOptions.length
+                        ? 'Select an order'
+                        : 'No orders available'}
+                  </option>
+                  {orderOptions.map((order) => (
+                    <option key={order._id || order.orderId} value={order.orderId}>
+                      {order.orderId}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="productId" className="block text-sm font-medium text-slate-700 mb-1">
+                  Product ID (Optional)
+                </label>
+                <select
+                  id="productId"
+                  value={formData.productId}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, productId: e.target.value }))}
+                  disabled={!formData.orderId || submitProductOptions.length === 0}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
+                >
+                  <option value="">Order-level feedback (no product selected)</option>
+                  {submitProductOptions.map((product) => (
+                    <option key={product.productId} value={product.productId}>
+                      {product.productName} ({product.productId})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Add Product ID for product-level feedback. Leave empty to add feedback for the full order.
+                </p>
               </div>
 
               <div>
@@ -261,13 +363,31 @@ export default function FeedbackPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <h2 className="text-xl font-bold text-slate-900">Feedback History</h2>
               <form onSubmit={handleSearch} className="flex gap-2">
-                <input
-                  type="text"
+                <select
                   value={searchOrderId}
-                  onChange={(e) => setSearchOrderId(e.target.value)}
+                  onChange={(e) => handleSearchOrderChange(e.target.value)}
                   className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                  placeholder="Filter by Order ID"
-                />
+                >
+                  <option value="">All orders</option>
+                  {orderOptions.map((order) => (
+                    <option key={`search-${order._id || order.orderId}`} value={order.orderId}>
+                      {order.orderId}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={searchProductId}
+                  onChange={(e) => setSearchProductId(e.target.value)}
+                  disabled={searchProductOptions.length === 0}
+                  className="px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-600"
+                >
+                  <option value="">All products</option>
+                  {searchProductOptions.map((product) => (
+                    <option key={`search-${product.productId}`} value={product.productId}>
+                      {product.productName} ({product.productId})
+                    </option>
+                  ))}
+                </select>
                 <button
                   type="submit"
                   className="bg-slate-800 hover:bg-black text-white px-3 py-2 rounded-lg text-sm font-semibold"
@@ -298,6 +418,9 @@ export default function FeedbackPage() {
                       <div>
                         <p className="text-sm text-slate-500">Order</p>
                         <p className="font-semibold text-slate-900">{item.orderId}</p>
+                        <p className="text-sm text-slate-500 mt-1">Product</p>
+                        <p className="font-semibold text-slate-900">{item.productName || item.productId}</p>
+                        <p className="text-xs text-slate-500">{item.productId}</p>
                       </div>
                       <div className="text-sm text-slate-500">
                         {new Date(item.updatedAt || item.createdAt).toLocaleString()}

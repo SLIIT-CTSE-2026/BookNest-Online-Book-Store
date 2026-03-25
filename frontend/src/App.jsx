@@ -3,11 +3,15 @@ import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CustomerDashboard from './components/CustomerDashboard';
-import SellerDashboard from './components/SellerDashboard';
 import AddBookPage from './components/AddBookPage';
 import FeedbackPage from './components/FeedbackPage';
 import SellerFeedbackPage from './components/SellerFeedbackPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import OrderList from './components/OrderList';
+import OrderDetails from './components/OrderDetails';
+import CreateOrder from './components/CreateOrder';
+import CustomerProfile from './components/CustomerProfile';
+import SellerDashboard from './components/SellerDashboard';
 
 export default function App() {
   return (
@@ -46,7 +50,7 @@ export default function App() {
             <ProtectedRoute requiredRole="seller">
               <AddBookPage />
             </ProtectedRoute>
-          }
+          } 
         />
         <Route
           path="/seller-feedback"
@@ -56,6 +60,47 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route 
+          path="/customer-profile/:customerId" 
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <CustomerProfile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/seller-profile/:sellerId" 
+          element={
+            <ProtectedRoute requiredRole="seller">
+              <SellerProfile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/orders" 
+          element={
+            <ProtectedRoute>
+              <OrderList />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/order-details/:orderId" 
+          element={
+            <ProtectedRoute>
+              <OrderDetails />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/create-order" 
+          element={
+            <ProtectedRoute>
+              <CreateOrder />
+            </ProtectedRoute>
+          } 
+        />
+
       </Routes>
     </Router>
   )

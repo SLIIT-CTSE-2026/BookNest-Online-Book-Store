@@ -38,7 +38,13 @@ app.use(
   authorizeRole('seller', 'customer'),
   createProxyMiddleware({
     target: process.env.PRODUCT_SERVICE_URL,
-    changeOrigin: true,    
+    changeOrigin: true,
+    onProxyReq: (proxyReq, req, res) => {
+      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to SELLER SERVICE`);
+    },
+    onProxyRes: (proxyRes, req, res) => {
+      console.log(`[${new Date().toISOString()}] Received response from SELLER SERVICE with status ${proxyRes.statusCode}`);
+    }
   })
 );
 
@@ -47,6 +53,16 @@ app.use('/api/feedback',
   createProxyMiddleware({
     target: `${process.env.FEEDBACK_SERVICE_URL}/api/feedback`,
     changeOrigin: true,
+  })
+);
+
+app.use('/api/orders',
+  authenticateToken,
+  authorizeRole('customer', 'seller', 'admin'),
+  createProxyMiddleware({
+    target: process.env.ORDER_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: (path) => `/api/orders${path}`,
   })
 );
 

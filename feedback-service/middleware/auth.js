@@ -13,7 +13,7 @@ export const authenticate = async (req, res, next) => {
   }
 
   try {
-    const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:5001';
+    const authServiceUrl = process.env.AUTH_SERVICE_URL;
     const response = await axios.post(`${authServiceUrl}/verify-token`, {}, {
       headers: { Authorization: `Bearer ${token}` },
       timeout: 5000

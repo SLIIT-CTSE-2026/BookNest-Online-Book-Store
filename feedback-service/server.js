@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import feedbackRoutes from './routes/feedbackRoutes.js';
+import Feedback from './models/Feedback.js';
 
 dotenv.config();
 const app = express();
@@ -27,6 +28,7 @@ const start = async () => {
     }
 
     await mongoose.connect(process.env.MONGO_URI);
+    await Feedback.syncIndexes();
     console.log('Feedback Service - Database Connected');
 
     const port = process.env.PORT;
