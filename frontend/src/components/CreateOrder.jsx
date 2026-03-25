@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api, { productAPI } from '../utils/api';
+import { productAPI } from '../utils/api';
 
 export default function CreateOrder() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -18,7 +17,6 @@ export default function CreateOrder() {
     notes: ''
   });
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
@@ -29,7 +27,6 @@ export default function CreateOrder() {
     }
 
     const parsedUser = JSON.parse(userData);
-    setUser(parsedUser);
     
     // Pre-fill customer information if user is a customer
     if (parsedUser.role === 'customer') {
