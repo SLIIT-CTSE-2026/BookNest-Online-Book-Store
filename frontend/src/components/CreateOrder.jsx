@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { productAPI } from '../utils/api';
+import api from '../utils/api';
 
 export default function CreateOrder() {
   const navigate = useNavigate();

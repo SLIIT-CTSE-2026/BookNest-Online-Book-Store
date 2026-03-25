@@ -67,10 +67,10 @@ export default function FeedbackPage() {
     return `Average rating: ${(total / items.length).toFixed(1)} / 5`;
   }, [items]);
 
-  const clearAlerts = () => {
+  const clearAlerts = useCallback(() => {
     setError('');
     setMessage('');
-  };
+  }, []);
 
   const orderOptions = useMemo(
     () => customerOrders.filter((order) => order?.orderId),
