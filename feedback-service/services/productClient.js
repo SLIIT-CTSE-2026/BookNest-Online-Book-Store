@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const getProductServiceUrl = () => process.env.PRODUCT_SERVICE_URL || 'http://localhost:5004';
+const getProductServiceUrl = () => process.env.PRODUCT_SERVICE_URL;
 
 export const fetchProductById = async (productId) => {
   try {

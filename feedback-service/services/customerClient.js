@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const fetchCustomerById = async (customerId) => {
   try {
-    const customerServiceUrl = process.env.CUSTOMER_SERVICE_URL || 'http://localhost:5002';
+    const customerServiceUrl = process.env.CUSTOMER_SERVICE_URL;
     const response = await axios.get(`${customerServiceUrl}/api/customers`, {
       params: { search: customerId },
       timeout: 5000
