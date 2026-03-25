@@ -11,6 +11,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import OrderList from './components/OrderList';
 import OrderDetails from './components/OrderDetails';
 import CreateOrder from './components/CreateOrder';
+import CustomerProfile from './components/CustomerProfile';
+import SellerDashboard from './components/SellerDashboard';
 
 export default function App() {
   return (
@@ -60,6 +62,22 @@ export default function App() {
           }
         />
         <Route 
+          path="/customer-profile/:customerId" 
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <CustomerProfile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/seller-profile/:sellerId" 
+          element={
+            <ProtectedRoute requiredRole="seller">
+              <SellerProfile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
           path="/orders" 
           element={
             <ProtectedRoute>
@@ -83,6 +101,7 @@ export default function App() {
             </ProtectedRoute>
           } 
         />
+
       </Routes>
     </Router>
   )
