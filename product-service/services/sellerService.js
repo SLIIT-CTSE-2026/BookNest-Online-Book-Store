@@ -1,4 +1,4 @@
-const SELLER_SERVICE_URL = (process.env.SELLER_SERVICE_URL || 'http://localhost:5003').replace(/\/$/, '');
+const SELLER_SERVICE_URL = (process.env.SELLER_SERVICE_URL).replace(/\/$/, '');
 
 const requestSellerService = async (path, query = {}) => {
   const searchParams = new URLSearchParams();

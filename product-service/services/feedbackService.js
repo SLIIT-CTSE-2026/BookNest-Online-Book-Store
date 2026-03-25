@@ -1,4 +1,4 @@
-const FEEDBACK_SERVICE_URL = (process.env.FEEDBACK_SERVICE_URL || 'http://localhost:5007').replace(/\/$/, '');
+const FEEDBACK_SERVICE_URL = (process.env.FEEDBACK_SERVICE_URL).replace(/\/$/, '');
 
 const requestFeedbackService = async (path, token, query = {}) => {
   const searchParams = new URLSearchParams();
