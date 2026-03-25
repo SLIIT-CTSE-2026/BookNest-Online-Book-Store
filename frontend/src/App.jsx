@@ -3,7 +3,6 @@ import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CustomerDashboard from './components/CustomerDashboard';
-import SellerDashboard from './components/SellerDashboard';
 import AddBookPage from './components/AddBookPage';
 import FeedbackPage from './components/FeedbackPage';
 import SellerFeedbackPage from './components/SellerFeedbackPage';
