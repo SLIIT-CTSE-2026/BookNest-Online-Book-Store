@@ -45,7 +45,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Routes
-app.use('/api/orders', orderRoutes);
+app.use('/', orderRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

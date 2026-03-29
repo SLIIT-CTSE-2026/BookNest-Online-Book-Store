@@ -7,14 +7,15 @@ import { authenticateToken, authorizeRole } from './middleware/auth.js';
 dotenv.config();
 const app = express();
 
-// Middleware
 app.use(cors());
 
+// Auth Service (Public)
 app.use('/api/auth', createProxyMiddleware({
   target: process.env.AUTH_SERVICE_URL,
   changeOrigin: true,
 }));
 
+// Customer Service
 app.use('/api/customers', 
   authenticateToken, 
   createProxyMiddleware({
@@ -23,6 +24,7 @@ app.use('/api/customers',
   })
 );
 
+// Seller Service
 app.use('/api/sellers', 
   authenticateToken,
   authorizeRole('seller'),
@@ -32,6 +34,7 @@ app.use('/api/sellers',
   })
 );
 
+// Product Service
 app.use(
   '/api/products',
   authenticateToken,
@@ -40,29 +43,27 @@ app.use(
     target: process.env.PRODUCT_SERVICE_URL,
     changeOrigin: true,
     onProxyReq: (proxyReq, req, res) => {
-      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to SELLER SERVICE`);
-    },
-    onProxyRes: (proxyRes, req, res) => {
-      console.log(`[${new Date().toISOString()}] Received response from SELLER SERVICE with status ${proxyRes.statusCode}`);
+      console.log(`[${new Date().toISOString()}] Proxying ${req.method} ${req.url} to PRODUCT SERVICE`);
     }
   })
 );
 
+// Feedback Service (Fixed double-pathing)
 app.use('/api/feedback',
   authenticateToken,
   createProxyMiddleware({
-    target: `${process.env.FEEDBACK_SERVICE_URL}/api/feedback`,
+    target: process.env.FEEDBACK_SERVICE_URL,
     changeOrigin: true,
   })
 );
 
+// Order Service
 app.use('/api/orders',
   authenticateToken,
   authorizeRole('customer', 'seller', 'admin'),
   createProxyMiddleware({
     target: process.env.ORDER_SERVICE_URL,
     changeOrigin: true,
-    pathRewrite: (path) => `/api/orders${path}`,
   })
 );
 

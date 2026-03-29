@@ -25,6 +25,11 @@ export default function FeedbackPage() {
   const [editingId, setEditingId] = useState('');
   const [editData, setEditData] = useState({ rating: '5', comment: '' });
 
+  const clearAlerts = useCallback(() => {
+    setError('');
+    setMessage('');
+  }, []);
+
   const loadFeedback = useCallback(async (orderId = '', productId = '') => {
     setLoading(true);
     clearAlerts();
@@ -66,11 +71,6 @@ export default function FeedbackPage() {
     const total = items.reduce((sum, item) => sum + Number(item.rating || 0), 0);
     return `Average rating: ${(total / items.length).toFixed(1)} / 5`;
   }, [items]);
-
-  const clearAlerts = useCallback(() => {
-    setError('');
-    setMessage('');
-  }, []);
 
   const orderOptions = useMemo(
     () => customerOrders.filter((order) => order?.orderId),
