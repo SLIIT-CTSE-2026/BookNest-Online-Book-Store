@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: [customer-service, seller-service, auth-service, product-service, feedback-service, api-gateway, frontend]
+        service: [customer-service, seller-service, auth-service, product-service, feedback-service, order-service, api-gateway, frontend]
 
     steps:
       - name: Checkout Code
