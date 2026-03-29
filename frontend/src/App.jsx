@@ -12,6 +12,7 @@ import OrderDetails from './components/OrderDetails';
 import CreateOrder from './components/CreateOrder';
 import CustomerProfile from './components/CustomerProfile';
 import SellerDashboard from './components/SellerDashboard';
+import SellerProfile from './components/SellerProfile';
 
 export default function App() {
   return (

@@ -1,6 +1,5 @@
 import jwt from 'jsonwebtoken';
 
-// Verify JWT token
 export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -24,7 +23,8 @@ export const authenticateToken = (req, res, next) => {
   }
 };
 
-// Role-Based Access Control
+export const authenticate = authenticateToken;
+
 export const authorizeRole = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -44,3 +44,12 @@ export const authorizeRole = (...roles) => {
     next();
   };
 };
+
+// Used by Product Service for managing inventory.
+export const verifySeller = authorizeRole('seller'); 
+
+// Used by Feedback Service for seller-specific views.
+export const requireSeller = authorizeRole('seller'); 
+
+// Used by Feedback Service for posting reviews.
+export const requireCustomer = authorizeRole('customer');

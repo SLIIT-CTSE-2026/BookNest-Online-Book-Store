@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/feedback', feedbackRoutes);
+app.use('/', feedbackRoutes);
 
 app.get('/health', (_req, res) => {
   res.status(200).json({
