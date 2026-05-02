@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import MyBooks from './MyBooks';
 import EditBookForm from './EditBookForm';
 import CustomerOrders from './CustomerOrders';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function SellerDashboard() {
   const [user] = useState(() => {
@@ -64,20 +64,19 @@ export default function SellerDashboard() {
             <p className="text-gray-600 mt-2">Manage your books and sales</p>
           </div>
 
-          {/* Navigation Cards */}
+          {/* Navigation Cards — uniform layout (icon + title + subtitle), no per-tile rings or extra buttons */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <button
+              type="button"
               onClick={() => {
                 setActiveView('myBooks');
                 setEditingBook(null);
               }}
-              className={`bg-white overflow-hidden shadow rounded-lg p-6 text-left hover:shadow-lg transition-shadow ${
-                activeView === 'myBooks' ? 'ring-2 ring-indigo-500' : ''
-              }`}
+              className="bg-white overflow-hidden shadow rounded-lg p-6 text-left cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
             >
               <div className="flex items-center">
                 <div className="shrink-0">
-                  <div className="text-3xl">📖</div>
+                  <div className="text-3xl" aria-hidden>📖</div>
                 </div>
                 <div className="ml-5">
                   <h3 className="text-lg font-medium text-gray-900">My Books</h3>
@@ -87,15 +86,16 @@ export default function SellerDashboard() {
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 setEditingBook(null);
                 navigate('/seller/add-book');
               }}
-              className="bg-white overflow-hidden shadow rounded-lg p-6 text-left hover:shadow-lg transition-shadow"
+              className="bg-white overflow-hidden shadow rounded-lg p-6 text-left cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
             >
               <div className="flex items-center">
                 <div className="shrink-0">
-                  <div className="text-3xl">➕</div>
+                  <div className="text-3xl" aria-hidden>➕</div>
                 </div>
                 <div className="ml-5">
                   <h3 className="text-lg font-medium text-gray-900">Add Book</h3>
@@ -104,10 +104,10 @@ export default function SellerDashboard() {
               </div>
             </button>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg p-6">
+            <div className="bg-white overflow-hidden shadow rounded-lg p-6 hover:shadow-md transition-shadow duration-300">
               <div className="flex items-center">
                 <div className="shrink-0">
-                  <div className="text-3xl">📊</div>
+                  <div className="text-3xl" aria-hidden>📊</div>
                 </div>
                 <div className="ml-5">
                   <h3 className="text-lg font-medium text-gray-900">Sales</h3>
@@ -117,17 +117,16 @@ export default function SellerDashboard() {
             </div>
 
             <button
+              type="button"
               onClick={() => {
                 setActiveView('orders');
                 setEditingBook(null);
               }}
-              className={`bg-white overflow-hidden shadow rounded-lg p-6 text-left hover:shadow-lg transition-shadow ${
-                activeView === 'orders' ? 'ring-2 ring-indigo-500' : ''
-              }`}
+              className="bg-white overflow-hidden shadow rounded-lg p-6 text-left cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
             >
               <div className="flex items-center">
                 <div className="shrink-0">
-                  <div className="text-3xl">📦</div>
+                  <div className="text-3xl" aria-hidden>📦</div>
                 </div>
                 <div className="ml-5">
                   <h3 className="text-lg font-medium text-gray-900">Orders</h3>
@@ -136,20 +135,17 @@ export default function SellerDashboard() {
               </div>
             </button>
 
-            
-
             <button
+              type="button"
               onClick={() => {
                 setActiveView('dashboard');
                 setEditingBook(null);
               }}
-              className={`bg-white overflow-hidden shadow rounded-lg p-6 text-left hover:shadow-lg transition-shadow ${
-                activeView === 'dashboard' ? 'ring-2 ring-indigo-500' : ''
-              }`}
+              className="bg-white overflow-hidden shadow rounded-lg p-6 text-left cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
             >
               <div className="flex items-center">
                 <div className="shrink-0">
-                  <div className="text-3xl">👤</div>
+                  <div className="text-3xl" aria-hidden>👤</div>
                 </div>
                 <div className="ml-5">
                   <h3 className="text-lg font-medium text-gray-900">Profile</h3>
@@ -157,29 +153,22 @@ export default function SellerDashboard() {
                 </div>
               </div>
             </button>
-         
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="shrink-0">
-                      <div className="text-3xl">⭐</div>
-                    </div>
-                    <div className="ml-5">
-                      <h3 className="text-lg font-medium text-gray-900">Customer Feedback</h3>
-                      <p className="text-gray-600">Read ratings from your customers</p>
-                    </div>
-                  </div>
-                  <Link
-                    to="/seller-feedback"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
-                  >
-                    Open
-                  </Link>
+            <button
+              type="button"
+              onClick={() => navigate('/seller-feedback')}
+              className="bg-white overflow-hidden shadow rounded-lg p-6 text-left cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+            >
+              <div className="flex items-center">
+                <div className="shrink-0">
+                  <div className="text-3xl" aria-hidden>⭐</div>
+                </div>
+                <div className="ml-5">
+                  <h3 className="text-lg font-medium text-gray-900">Customer Feedback</h3>
+                  <p className="text-gray-600">Read ratings from your customers</p>
                 </div>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Dynamic Content */}
