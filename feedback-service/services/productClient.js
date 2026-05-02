@@ -1,19 +1,28 @@
 import axios from 'axios';
 
-const getProductServiceUrl = () => process.env.PRODUCT_SERVICE_URL;
+const normalizeProductServiceBase = () => {
+  let base = (process.env.PRODUCT_SERVICE_URL || '').trim().replace(/\/$/, '');
+  base = base.replace(/\/api\/products\/?$/i, '');
+  return base;
+};
 
 export const fetchProductById = async (productId) => {
+  const baseUrl = normalizeProductServiceBase();
+  if (!baseUrl) {
+    const err = new Error('PRODUCT_SERVICE_URL is not configured');
+    err.status = 503;
+    throw err;
+  }
+
   try {
-    // Use the by-product-id endpoint for user-friendly productId lookup
-    const response = await axios.get(`${getProductServiceUrl()}/by-product-id/${productId}`, {
+    const response = await axios.get(`${baseUrl}/by-product-id/${encodeURIComponent(productId)}`, {
       timeout: 5000
     });
 
     return response.data?.product || response.data?.data?.product || response.data?.data;
   } catch (error) {
-    // Fallback: try the original endpoint if the new one fails (for backward compatibility)
     try {
-      const response = await axios.get(`${getProductServiceUrl()}/${productId}`, {
+      const response = await axios.get(`${baseUrl}/${encodeURIComponent(productId)}`, {
         timeout: 5000
       });
       return response.data?.product || response.data?.data?.product || response.data?.data;
@@ -26,8 +35,15 @@ export const fetchProductById = async (productId) => {
 };
 
 export const syncProductRating = async (productId, averageRating, ratingsCount) => {
+  const baseUrl = normalizeProductServiceBase();
+  if (!baseUrl) {
+    const err = new Error('PRODUCT_SERVICE_URL is not configured');
+    err.status = 503;
+    throw err;
+  }
+
   try {
-    await axios.post(`${getProductServiceUrl()}/ratings/sync`, {
+    await axios.post(`${baseUrl}/ratings/sync`, {
       productId,
       averageRating,
       ratingsCount

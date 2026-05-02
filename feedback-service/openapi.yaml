@@ -175,7 +175,7 @@ components:
   schemas:
     CreateFeedbackRequest:
       type: object
-      required: [orderId, rating]
+      required: [orderId, rating, comment]
       properties:
         orderId:
           type: string
@@ -187,6 +187,7 @@ components:
           maximum: 5
         comment:
           type: string
+          minLength: 3
           maxLength: 1000
     UpdateFeedbackRequest:
       type: object
@@ -197,4 +198,5 @@ components:
           maximum: 5
         comment:
           type: string
+          minLength: 3
           maxLength: 1000

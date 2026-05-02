@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function CustomerDashboard() {
   const [user] = useState(() => {
@@ -139,24 +139,28 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => navigate('/customer-feedback')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate('/customer-feedback');
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="My Feedback — create and manage order feedback"
+            >
               <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div>
-                      <div className="text-3xl">⭐</div>
-                    </div>
-                    <div className="ml-5">
-                      <h3 className="text-lg font-medium text-gray-900">My Feedback</h3>
-                      <p className="text-gray-600">Create and manage order feedback</p>
-                    </div>
+                <div className="flex items-center">
+                  <div>
+                    <div className="text-3xl" aria-hidden>⭐</div>
                   </div>
-                  <Link
-                    to="/customer-feedback"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
-                  >
-                    Open
-                  </Link>
+                  <div className="ml-5">
+                    <h3 className="text-lg font-medium text-gray-900">My Feedback</h3>
+                    <p className="text-gray-600">Create and manage order feedback</p>
+                  </div>
                 </div>
               </div>
             </div>
