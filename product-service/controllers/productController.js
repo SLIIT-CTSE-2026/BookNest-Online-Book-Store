@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 const {
   getRelevantFeedbackForProduct,
@@ -256,15 +257,17 @@ exports.syncProductRatings = async (req, res) => {
       });
     }
 
-    // Find product by user-friendly productId field (not MongoDB _id)
-    const product = await Product.findOneAndUpdate(
-      { productId: productId },
-      {
-        'ratings.average': Math.max(0, Math.min(5, normalizedAverage)),
-        'ratings.count': Math.max(0, normalizedCount)
-      },
-      { new: true }
-    );
+    // Orders / feedback may reference either business productId (PROD-…) or MongoDB _id
+    const ratingPatch = {
+      'ratings.average': Math.max(0, Math.min(5, normalizedAverage)),
+      'ratings.count': Math.max(0, normalizedCount)
+    };
+
+    let product = await Product.findOneAndUpdate({ productId }, ratingPatch, { new: true });
+
+    if (!product && mongoose.Types.ObjectId.isValid(productId)) {
+      product = await Product.findOneAndUpdate({ _id: productId }, ratingPatch, { new: true });
+    }
 
     if (!product) {
       return res.status(404).json({
