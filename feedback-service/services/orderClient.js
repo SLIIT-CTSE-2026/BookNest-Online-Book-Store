@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const normalizeOrderServiceBase = () => {
+  let base = (process.env.ORDER_SERVICE_URL || '').trim().replace(/\/$/, '');
+  base = base.replace(/\/api\/orders\/?$/i, '');
+  return base;
+};
+
 export const verifyOrderOwnership = async (orderId, customerId, token) => {
-  const orderServiceUrl = process.env.ORDER_SERVICE_URL;
+  const orderServiceUrl = normalizeOrderServiceBase();
 
   if (!orderServiceUrl) {
     const err = new Error('ORDER_SERVICE_URL is not configured');
@@ -10,10 +16,13 @@ export const verifyOrderOwnership = async (orderId, customerId, token) => {
   }
 
   try {
-    const response = await axios.get(`${orderServiceUrl}/api/orders/customer/${customerId}/order/${orderId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      timeout: 5000
-    });
+    const response = await axios.get(
+      `${orderServiceUrl}/customer/${encodeURIComponent(customerId)}/order/${encodeURIComponent(orderId)}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 5000
+      }
+    );
 
     const order = response.data?.data;
     if (!order) {

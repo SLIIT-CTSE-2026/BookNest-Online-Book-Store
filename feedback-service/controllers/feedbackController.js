@@ -3,6 +3,8 @@ import { fetchCustomerById } from '../services/customerClient.js';
 import { verifyOrderOwnership } from '../services/orderClient.js';
 import { fetchProductById, syncProductRating } from '../services/productClient.js';
 
+const MIN_COMMENT_LENGTH = 3;
+
 const parseRating = (value) => {
   if (value === undefined || value === null) return null;
   const numeric = Number(value);
@@ -10,9 +12,33 @@ const parseRating = (value) => {
   return numeric;
 };
 
-const recalculateAndSyncProductRating = async (productId) => {
+const validateComment = (comment, res) => {
+  const trimmed = typeof comment === 'string' ? comment.trim() : '';
+  if (!trimmed) {
+    res.status(400).json({ success: false, message: 'Comment is required — please write your feedback.' });
+    return null;
+  }
+  if (trimmed.length < MIN_COMMENT_LENGTH) {
+    res.status(400).json({
+      success: false,
+      message: `Comment must be at least ${MIN_COMMENT_LENGTH} characters.`
+    });
+    return null;
+  }
+  return trimmed;
+};
+
+/** Prefer business productId from catalog; orders sometimes store only Mongo _id. */
+const resolveSyncProductKey = (productDoc, fallbackProductId) => {
+  if (!productDoc) return fallbackProductId;
+  if (productDoc.productId) return String(productDoc.productId).trim();
+  if (productDoc._id != null) return String(productDoc._id);
+  return fallbackProductId;
+};
+
+const recalculateAndSyncProductRating = async (feedbackProductId, syncProductKey = feedbackProductId) => {
   const aggregate = await Feedback.aggregate([
-    { $match: { productId } },
+    { $match: { productId: feedbackProductId } },
     {
       $group: {
         _id: '$productId',
@@ -25,7 +51,19 @@ const recalculateAndSyncProductRating = async (productId) => {
   const averageRating = aggregate[0]?.averageRating ? Number(aggregate[0].averageRating.toFixed(2)) : 0;
   const ratingsCount = aggregate[0]?.ratingsCount || 0;
 
-  await syncProductRating(productId, averageRating, ratingsCount);
+  await syncProductRating(syncProductKey, averageRating, ratingsCount);
+};
+
+/** Rating sync must not fail the request after feedback is persisted (product-service id quirks). */
+const syncProductRatingsBestEffort = async (feedbackProductId, syncProductKey = feedbackProductId) => {
+  try {
+    await recalculateAndSyncProductRating(feedbackProductId, syncProductKey);
+  } catch (error) {
+    console.warn(
+      '[feedback-service] Product rating sync skipped:',
+      error.message || error
+    );
+  }
 };
 
 export const createFeedback = async (req, res) => {
@@ -40,6 +78,9 @@ export const createFeedback = async (req, res) => {
     if (numericRating === null || numericRating < 1 || numericRating > 5) {
       return res.status(400).json({ success: false, message: 'rating must be between 1 and 5' });
     }
+
+    const trimmedComment = validateComment(comment, res);
+    if (!trimmedComment) return;
 
     const customer = await fetchCustomerById(req.user.userId);
     if (!customer) {
@@ -78,13 +119,13 @@ export const createFeedback = async (req, res) => {
         productId,
         productName: orderItem?.productName || product?.title,
         rating: numericRating,
-        comment,
+        comment: trimmedComment,
         sellerId: product?.sellerId,
         orderSnapshot: order
       });
 
       await feedback.save();
-      await recalculateAndSyncProductRating(productId);
+      await syncProductRatingsBestEffort(productId, resolveSyncProductKey(product, productId));
     } else {
       const existingOrderFeedback = await Feedback.findOne({
         orderId,
@@ -99,7 +140,7 @@ export const createFeedback = async (req, res) => {
         orderId,
         customerId: req.user.userId,
         rating: numericRating,
-        comment,
+        comment: trimmedComment,
         orderSnapshot: order
       });
 
@@ -223,12 +264,14 @@ export const updateFeedback = async (req, res) => {
     }
 
     if (comment !== undefined) {
-      feedback.comment = comment;
+      const trimmed = validateComment(comment, res);
+      if (!trimmed) return;
+      feedback.comment = trimmed;
     }
 
     await feedback.save();
     if (feedback.productId) {
-      await recalculateAndSyncProductRating(feedback.productId);
+      await syncProductRatingsBestEffort(feedback.productId);
     }
 
     return res.status(200).json({ success: true, message: 'Feedback updated', data: { feedback } });
@@ -253,7 +296,7 @@ export const deleteFeedback = async (req, res) => {
     const { productId } = feedback;
     await feedback.deleteOne();
     if (productId) {
-      await recalculateAndSyncProductRating(productId);
+      await syncProductRatingsBestEffort(productId);
     }
     return res.status(200).json({ success: true, message: 'Feedback deleted' });
   } catch (error) {
