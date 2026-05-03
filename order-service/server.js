@@ -14,12 +14,12 @@ const app = express();
 const PORT = process.env.PORT;
 
 // Security middleware
-app.use(helmet()); // Set security HTTP headers
+app.use(helmet()); 
 
 // Rate limiting middleware
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.'
@@ -95,34 +95,34 @@ app.use((err, req, res, next) => {
 const start = async () => {
   try {
     // Connect to MongoDB with better error handling
-    console.log('🔄 Connecting to MongoDB...');
+    console.log(' Connecting to MongoDB...');
     
     await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-      socketTimeoutMS: 45000, // Socket timeout
+      serverSelectionTimeoutMS: 5000, 
+      socketTimeoutMS: 45000, 
       retryWrites: true,
       retryReads: true
     });
     
-    console.log('✅ Order Service - Database Connected Successfully');
+    console.log(' Order Service - Database Connected Successfully');
     const maskedUri = process.env.MONGO_URI.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
-    console.log(`📦 MongoDB: ${maskedUri}`);
+    console.log(` MongoDB: ${maskedUri}`);
 
     // Start server
     app.listen(PORT, () => {
-      console.log(`\n🚀 Order Service running on port ${PORT}`);
-      console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 Health Check: http://localhost:${PORT}/health`);
-      console.log(`📦 Orders API: http://localhost:${PORT}/api/orders\n`);
+      console.log(`\n Order Service running on port ${PORT}`);
+      console.log(` Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(` Health Check: http://localhost:${PORT}/health`);
+      console.log(` Orders API: http://localhost:${PORT}/api/orders\n`);
     });
 
   } catch (error) {
-    console.error('❌ Order Service - Initialization Error:', error.message);
+    console.error(' Order Service - Initialization Error:', error.message);
     console.error('Stack Trace:', error.stack);
     
     // Provide helpful troubleshooting tips
     if (error.code === 'ENOTFOUND' || error.code === 'EREFUSED' || error.message.includes('querySrv')) {
-      console.error('\n🔍 Troubleshooting MongoDB Connection:');
+      console.error('\n Troubleshooting MongoDB Connection:');
       console.error('1. Check your internet connection');
       console.error('2. Verify MongoDB Atlas cluster is running and accessible');
       console.error('3. Check if your IP address is whitelisted in MongoDB Atlas');
