@@ -11,9 +11,14 @@ services:
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
       - MONGO_URI=${CUSTOMER_MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M
     networks:
       - booknest-network
-
 
   seller-service:
     build:
@@ -27,9 +32,86 @@ services:
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
       - MONGO_URI=${SELLER_MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M
     networks:
       - booknest-network
 
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_PRODUCT_SERVICE_PORT}:${EXTERNAL_PRODUCT_SERVICE_PORT}"
+    container_name: product-service
+    environment:
+      - PORT=${EXTERNAL_PRODUCT_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+      - FEEDBACK_SERVICE_URL=${FEEDBACK_SERVICE_URL}
+      - MONGO_URI=${PRODUCT_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M
+    networks:
+      - booknest-network  
+
+  feedback-service:
+    build:
+      context: ./feedback-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_FEEDBACK_SERVICE_PORT}:${EXTERNAL_FEEDBACK_SERVICE_PORT}"
+    container_name: feedback-service
+    environment:
+      - PORT=${EXTERNAL_FEEDBACK_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL}
+      - PRODUCT_SERVICE_URL=${PRODUCT_SERVICE_URL}
+      - MONGO_URI=${FEEDBACK_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M
+    networks:
+      - booknest-network
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - "${EXTERNAL_ORDER_SERVICE_PORT}:${EXTERNAL_ORDER_SERVICE_PORT}"
+    container_name: order-service
+    environment:
+      - PORT=${EXTERNAL_ORDER_SERVICE_PORT}
+      - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
+      - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
+      - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+      - MONGO_URI=${ORDER_MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - NODE_ENV=${NODE_ENV}
+    deploy:
+      resources:
+        limits:
+          memory: 120M
+        reservations:
+          memory: 60M
+    networks:
+      - booknest-network
 
   auth-service:
     build:
@@ -44,12 +126,17 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
       - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+    deploy:
+      resources:
+        limits:
+          memory: 100M
+        reservations:
+          memory: 50M
     depends_on:
       - customer-service
       - seller-service    
     networks:
       - booknest-network
-
 
   api-gateway:
     build:
@@ -64,6 +151,15 @@ services:
       - AUTH_SERVICE_URL=${AUTH_SERVICE_URL}
       - CUSTOMER_SERVICE_URL=${CUSTOMER_SERVICE_URL}
       - SELLER_SERVICE_URL=${SELLER_SERVICE_URL}
+      - PRODUCT_SERVICE_URL=${PRODUCT_SERVICE_URL}
+      - ORDER_SERVICE_URL=${ORDER_SERVICE_URL}
+      - FEEDBACK_SERVICE_URL=${FEEDBACK_SERVICE_URL}
+    deploy:
+      resources:
+        limits:
+          memory: 80M
+        reservations:
+          memory: 40M
     depends_on:
       - customer-service
       - seller-service
@@ -71,19 +167,23 @@ services:
     networks:
       - booknest-network
 
-
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "${EXTERNAL_FRONTEND_PORT}:80"
     container_name: frontend
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+        reservations:
+          memory: 20M
     depends_on:
       - api-gateway
     networks:
       - booknest-network
-
 
 networks:
   booknest-network:

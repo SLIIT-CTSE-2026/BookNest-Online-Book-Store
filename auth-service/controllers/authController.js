@@ -22,8 +22,10 @@ const createCustomerProfile = async (user) => {
       role: user.role,
       createDate: user.createDate
     };
-    
-    const response = await axios.post(`${customerServiceUrl}/`, customerData, {
+
+    console.log('Creating customer profile at:', `${customerServiceUrl}/api/customers/`);
+
+    const response = await axios.post(`${customerServiceUrl}/api/customers/`, customerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
@@ -51,7 +53,9 @@ const createSellerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    const response = await axios.post(`${sellerServiceUrl}/`, sellerData, {
+    console.log('Creating seller profile at:', `${sellerServiceUrl}/api/sellers/`);
+
+    const response = await axios.post(`${sellerServiceUrl}/api/sellers/`, sellerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
@@ -66,7 +70,7 @@ const createSellerProfile = async (user) => {
   }
 };
 
-// Register a new user
+// Register a new user (customer or seller)
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password, role = 'customer' } = req.body;
@@ -105,6 +109,8 @@ export const registerUser = async (req, res) => {
     });
 
     await newUser.save();
+
+    // Fetch the saved user to ensure userId is populated
     const savedUser = await User.findById(newUser._id);
     
     // Create customer profile if user is a customer
@@ -183,7 +189,7 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // Find user by email
+    // Find user by email (need to include password for comparison)
     const user = await User.findOne({ email }).select('+password');
     
     if (!user) {
@@ -228,7 +234,7 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// Verify token
+// Verify token (for other microservices)
 export const verifyToken = async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -313,7 +319,7 @@ export const logoutUser = async (req, res) => {
     // Add token to blacklist
     const blacklistedToken = new Blacklist({
       token,
-      expiresAt: new Date(decoded.exp * 1000)
+      expiresAt: new Date(decoded.exp * 1000) // Convert JWT exp to Date
     });
 
     await blacklistedToken.save();

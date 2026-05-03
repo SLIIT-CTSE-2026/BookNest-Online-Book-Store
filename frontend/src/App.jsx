@@ -3,9 +3,15 @@ import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CustomerDashboard from './components/CustomerDashboard';
+import AddBookPage from './components/AddBookPage';
+import FeedbackPage from './components/FeedbackPage';
+import SellerFeedbackPage from './components/SellerFeedbackPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import OrderList from './components/OrderList';
+import OrderDetails from './components/OrderDetails';
+import CreateOrder from './components/CreateOrder';
 import CustomerProfile from './components/CustomerProfile';
 import SellerDashboard from './components/SellerDashboard';
-import ProtectedRoute from './components/ProtectedRoute';
 import SellerProfile from './components/SellerProfile';
 
 export default function App() {
@@ -22,6 +28,38 @@ export default function App() {
               <CustomerDashboard />
             </ProtectedRoute>
           } 
+        />
+        <Route
+          path="/customer-feedback"
+          element={
+            <ProtectedRoute requiredRole="customer">
+              <FeedbackPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/seller-dashboard" 
+          element={
+            <ProtectedRoute requiredRole="seller">
+              <SellerDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/seller/add-book" 
+          element={
+            <ProtectedRoute requiredRole="seller">
+              <AddBookPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route
+          path="/seller-feedback"
+          element={
+            <ProtectedRoute requiredRole="seller">
+              <SellerFeedbackPage />
+            </ProtectedRoute>
+          }
         />
         <Route 
           path="/customer-profile/:customerId" 
@@ -40,13 +78,30 @@ export default function App() {
           } 
         />
         <Route 
-          path="/seller-dashboard" 
+          path="/orders" 
           element={
-            <ProtectedRoute requiredRole="seller">
-              <SellerDashboard />
+            <ProtectedRoute>
+              <OrderList />
             </ProtectedRoute>
           } 
         />
+        <Route 
+          path="/order-details/:orderId" 
+          element={
+            <ProtectedRoute>
+              <OrderDetails />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/create-order" 
+          element={
+            <ProtectedRoute>
+              <CreateOrder />
+            </ProtectedRoute>
+          } 
+        />
+
       </Routes>
     </Router>
   )

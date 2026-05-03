@@ -14,6 +14,15 @@ app.use(express.json());
 // Routes
 app.use('/', sellerRoutes);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Seller service is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 const start = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);

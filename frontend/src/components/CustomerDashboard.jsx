@@ -2,26 +2,24 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function CustomerDashboard() {
-  const [user, setUser] = useState(null);
+  const [user] = useState(() => {
+    const userData = localStorage.getItem('user');
+    return userData ? JSON.parse(userData) : null;
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (!token || !userData) {
+
+    if (!token || !user) {
       navigate('/login');
       return;
     }
 
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== 'customer') {
+    if (user.role !== 'customer') {
       navigate('/login');
-      return;
     }
-
-    setUser(parsedUser);
-  }, [navigate]);
+  }, [navigate, user]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -62,7 +60,24 @@ export default function CustomerDashboard() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300">
+      <div 
+        className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+        onClick={() => navigate('/create-order')}
+      >
+        <div className="p-6">
+          <div className="flex items-center">
+            <div>
+              <div className="text-3xl">➕</div>
+            </div>
+            <div className="ml-5">
+              <h3 className="text-lg font-medium text-gray-900">Create Order</h3>
+              <p className="text-gray-600">Place a new book order</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300">   
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -76,7 +91,7 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-300">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -90,10 +105,27 @@ export default function CustomerDashboard() {
               </div>
             </div>
 
-            <div 
-              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-              onClick={() => navigate(`/customer-profile/${user.userId}`)}
-            >
+<div 
+  className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+  onClick={() => navigate('/orders')}
+>
+  <div className="p-6">
+    <div className="flex items-center">
+      <div>
+        <div className="text-3xl">📦</div>
+      </div>
+      <div className="ml-5">
+        <h3 className="text-lg font-medium text-gray-900">View All Orders</h3>
+        <p className="text-gray-600">Manage and track orders</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div 
+  className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+  onClick={() => navigate(`/customer-profile/${user.userId}`)}
+>
               <div className="p-6">
                 <div className="flex items-center">
                   <div>
@@ -102,6 +134,32 @@ export default function CustomerDashboard() {
                   <div className="ml-5">
                     <h3 className="text-lg font-medium text-gray-900">Profile</h3>
                     <p className="text-gray-600">Manage your account</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              onClick={() => navigate('/customer-feedback')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  navigate('/customer-feedback');
+                }
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label="My Feedback — create and manage order feedback"
+            >
+              <div className="p-6">
+                <div className="flex items-center">
+                  <div>
+                    <div className="text-3xl" aria-hidden>⭐</div>
+                  </div>
+                  <div className="ml-5">
+                    <h3 className="text-lg font-medium text-gray-900">My Feedback</h3>
+                    <p className="text-gray-600">Create and manage order feedback</p>
                   </div>
                 </div>
               </div>

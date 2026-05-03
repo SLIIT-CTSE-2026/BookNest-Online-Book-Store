@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: BookNest Feedback Service API
+  version: 1.0.0
+  description: API contract for the feedback microservice used in the BookNest assignment.
+servers:
+  - url: http://localhost:5000
+    description: API Gateway base URL (recommended)
+  - url: http://localhost:5007
+    description: Local direct feedback-service URL
+tags:
+  - name: Feedback
+  - name: Health
+paths:
+  /api/feedback:
+    post:
+      tags: [Feedback]
+      summary: Create feedback
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFeedbackRequest'
+      responses:
+        '201':
+          description: Feedback created
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '409':
+          description: Duplicate feedback
+    get:
+      tags: [Feedback]
+      summary: Get customer feedbacks
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: orderId
+          schema:
+            type: string
+        - in: query
+          name: productId
+          schema:
+            type: string
+        - in: query
+          name: scope
+          schema:
+            type: string
+            enum: [order, product]
+      responses:
+        '200':
+          description: Feedback list
+        '401':
+          description: Unauthorized
+  /api/feedback/order/{orderId}:
+    get:
+      tags: [Feedback]
+      summary: Get feedback for an order
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Feedback list for order
+        '404':
+          description: No feedback found
+  /api/feedback/integration/order/{orderId}:
+    get:
+      tags: [Feedback]
+      summary: Integration proof endpoint for demonstration
+      description: Demonstrates live integration with customer-service and order-service.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Integration summary generated
+  /api/feedback/seller:
+    get:
+      tags: [Feedback]
+      summary: Get seller-facing product feedback
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Seller feedback list
+        '403':
+          description: Seller role required
+  /api/feedback/{feedbackId}:
+    put:
+      tags: [Feedback]
+      summary: Update own feedback
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: feedbackId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFeedbackRequest'
+      responses:
+        '200':
+          description: Feedback updated
+        '403':
+          description: Forbidden
+        '404':
+          description: Feedback not found
+    delete:
+      tags: [Feedback]
+      summary: Delete own feedback
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: feedbackId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Feedback deleted
+        '403':
+          description: Forbidden
+        '404':
+          description: Feedback not found
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      servers:
+        - url: http://localhost:5007
+          description: Direct feedback-service URL for service health checks
+      responses:
+        '200':
+          description: Service alive
+  /ready:
+    get:
+      tags: [Health]
+      summary: Readiness probe
+      servers:
+        - url: http://localhost:5007
+          description: Direct feedback-service URL for readiness checks
+      responses:
+        '200':
+          description: Service ready
+        '503':
+          description: Service not ready
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CreateFeedbackRequest:
+      type: object
+      required: [orderId, rating, comment]
+      properties:
+        orderId:
+          type: string
+        productId:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          minLength: 3
+          maxLength: 1000
+    UpdateFeedbackRequest:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          minLength: 3
+          maxLength: 1000

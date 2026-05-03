@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,17 +11,9 @@ const api = axios.create({
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  const userData = localStorage.getItem('user');
-  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
-  if (userData) {
-    const parsedUser = JSON.parse(userData);
-    config.headers['x-user-role'] = parsedUser.role;
-  }
-  
   return config;
 });
 
@@ -31,18 +23,50 @@ export const authAPI = {
   verifyToken: () => api.post('/auth/verify-token'),
 };
 
+export const feedbackAPI = {
+  create: (payload) => api.post('/feedback', payload),
+  listMine: (params = {}) => api.get('/feedback', { params }),
+  listForSeller: (params = {}) => api.get('/feedback/seller', { params }),
+  getByOrder: (orderId) => api.get(`/feedback/order/${orderId}`),
+  update: (feedbackId, payload) => api.put(`/feedback/${feedbackId}`, payload),
+  remove: (feedbackId) => api.delete(`/feedback/${feedbackId}`),
+};
+
+export const productAPI = {
+  createProduct: (productData) => api.post('/products', productData),
+  getAllProducts: () => api.get('/products'),
+  getCategories: () => api.get('/products/categories'),
+  getProductsBySeller: (sellerId) =>
+    api.get(`/products/seller/${sellerId}`),
+  getProductById: (productId) =>
+    api.get(`/products/${productId}`),
+  updateProduct: (productId, updateData) =>
+    api.put(`/products/${productId}`, updateData),
+  deleteProduct: (productId) =>
+    api.delete(`/products/${productId}`),
+};
+
+export const orderAPI = {
+  // Order CRUD operations
+  getOrders: () => api.get('/orders'),
+  createOrder: (orderData) => api.post('/orders', orderData),
+  getOrderById: (orderId) => api.get(`/orders/${orderId}`),
+  getOrdersByCustomerId: (customerId) => api.get(`/orders/customer/${customerId}`),
+  getOrdersByProductId: (productId) => api.get(`/orders/product/${productId}`),
+  updateOrder: (orderId, updateData) => api.patch(`/orders/${orderId}`, updateData),
+  deleteOrder: (orderId) => api.delete(`/orders/${orderId}`),
+  
+  // Integration endpoints
+  getCustomerDetails: (customerId) => api.get(`/orders/customer-details/${customerId}`),
+  getProductDetails: (productId) => api.get(`/orders/product-details/${productId}`),
+};
+
 export const customerAPI = {
   getCustomerById: (customerId) => api.get(`/customers/${customerId}`),
-  getAllCustomers: (search) => api.get(`/customers${search ? `?search=${search}` : ''}`),
-  updateCustomer: (customerId, updateData) => api.put(`/customers/${customerId}`, updateData),
-  deleteCustomer: (customerId) => api.delete(`/customers/${customerId}`),
 };
 
 export const sellerAPI = {
   getSellerById: (sellerId) => api.get(`/sellers/${sellerId}`),
-  getAllSellers: (search) => api.get(`/sellers${search ? `?search=${search}` : ''}`),
-  updateSeller: (sellerId, updateData) => api.put(`/sellers/${sellerId}`, updateData),
-  deleteSeller: (sellerId) => api.delete(`/sellers/${sellerId}`),
 };
 
 export default api;

@@ -30,35 +30,37 @@ export default function CustomerProfile() {
       return;
     }
 
+    const fetchCustomerProfile = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await customerAPI.getCustomerById(customerId);
+        const data = response.data;
+
+        if (data.success) {
+          setCustomer(data.data.customer);
+        } else {
+          setError(data.message || 'Failed to load customer profile');
+        }
+      } catch (err) {
+        console.error('Error fetching customer profile:', err);
+        if (err.response) {
+          setError(err.response.data.message || `HTTP ${err.response.status}: ${err.response.statusText}`);
+        } else if (err.request) {
+          setError('Failed to connect to server. Please make sure the API Gateway is running on port 5000.');
+        } else {
+          setError(`Network error: ${err.message}`);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCustomerProfile();
   }, [navigate, customerId]);
 
-  const fetchCustomerProfile = async () => {
-    try {
-      setLoading(true);
-      setError(null);      
-      
-      const response = await customerAPI.getCustomerById(customerId);
-      const data = response.data;
-      
-      if (data.success) {
-        setCustomer(data.data.customer);
-      } else {
-        setError(data.message || 'Failed to load customer profile');
-      }
-    } catch (err) {
-      console.error('Error fetching customer profile:', err);
-      if (err.response) {
-        setError(err.response.data.message || `HTTP ${err.response.status}: ${err.response.statusText}`);
-      } else if (err.request) {
-        setError('Failed to connect to server. Please make sure the API Gateway is running on port 5000.');
-      } else {
-        setError(`Network error: ${err.message}`);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const handleBack = () => {
     const userData = JSON.parse(localStorage.getItem('user'));
@@ -191,14 +193,14 @@ export default function CustomerProfile() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Last Updated</label>
                       <p className="mt-1 text-sm text-gray-900">
-                        {customer.updatedAt 
+                        {customer.updatedAt
                           ? new Date(customer.updatedAt).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
                           : 'Never updated'
                         }
                       </p>
