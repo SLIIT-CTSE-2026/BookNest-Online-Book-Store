@@ -6,7 +6,7 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <h1 className="text-6xl font-bold text-gray-800 mb-4">
-            Book<span className="text-indigo-600">Nest - Viva</span>
+            Book<span className="text-indigo-600">Nest</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8">Your Online Book Store</p>
           <div className="w-24 h-1 bg-indigo-600 mx-auto"></div>
