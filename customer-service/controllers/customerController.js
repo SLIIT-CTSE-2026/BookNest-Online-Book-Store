@@ -238,6 +238,16 @@ export const deleteCustomer = async (req, res) => {
   }
 };
 
+// Normalize a service base URL (removes trailing slash and /api/segment if present)
+const normalizeServiceBase = (url, apiSegment) => {
+  let base = (url || '').trim().replace(/\/$/, '');
+  if (apiSegment) {
+    const regex = new RegExp(`/api/${apiSegment}/?$`, 'i');
+    base = base.replace(regex, '');
+  }
+  return base;
+};
+
 export const getCustomerSummary = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -246,9 +256,9 @@ export const getCustomerSummary = async (req, res) => {
     console.log("[getCustomerSummary] Called for customerId:", customerId);
     console.log("[getCustomerSummary] Auth header:", authHeader);
 
-    const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
-    const FEEDBACK_SERVICE_URL = process.env.FEEDBACK_SERVICE_URL;
-    
+    // Normalize service URLs
+    const ORDER_SERVICE_URL = normalizeServiceBase(process.env.ORDER_SERVICE_URL, 'orders');
+    const FEEDBACK_SERVICE_URL = normalizeServiceBase(process.env.FEEDBACK_SERVICE_URL, 'feedback');
 
     console.log("[getCustomerSummary] ORDER_SERVICE_URL:", ORDER_SERVICE_URL);
     console.log("[getCustomerSummary] FEEDBACK_SERVICE_URL:", FEEDBACK_SERVICE_URL);
