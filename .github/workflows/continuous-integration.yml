@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@f995f2e6039f9282baf409b14c0d41851b35f570
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@60edb5dd545a775178fba6a0fab3ce0a49617662
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
           node-version: 22
 
@@ -37,7 +37,10 @@ jobs:
         working-directory: ./${{ matrix.service }}
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@95299e2e0872c51fa247b2143d065d88c52c9a9a
+        # TODO: Pin this action to a full commit SHA for security
+        # To find the SHA: Visit https://github.com/SonarSource/sonarqube-scan-action/releases
+        # and copy the commit SHA from the v7 release tag
+        uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
