@@ -63,6 +63,7 @@ export const orderAPI = {
 
 export const customerAPI = {
   getCustomerById: (customerId) => api.get(`/customers/${customerId}`),
+  getSummary: (customerId) => api.get(`/customers/${customerId}/summary`),
 };
 
 export const sellerAPI = {

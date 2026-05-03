@@ -1,235 +1,124 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { customerAPI } from '../utils/api';
+import { customerAPI } from '../utils/api'; 
 
 export default function CustomerProfile() {
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [summary, setSummary] = useState({ orderCount: 0, feedbackCount: 0 });
+  
   const navigate = useNavigate();
   const { customerId } = useParams();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (!token || !userData) {
       navigate('/login');
       return;
     }
 
     const parsedUser = JSON.parse(userData);
-    // Allow access if it's the user's own profile
-    if (parsedUser.role !== 'customer') {
-      navigate('/login');
-      return;
-    }
-
-    if (parsedUser.role === 'customer' && parsedUser.userId !== customerId) {
+    
+    if (parsedUser.role !== 'customer' || parsedUser.userId !== customerId) {
       navigate('/customer-dashboard');
       return;
     }
 
-    const fetchCustomerProfile = async () => {
+    const fetchAllData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const response = await customerAPI.getCustomerById(customerId);
-        const data = response.data;
+        const [profileRes, summaryRes] = await Promise.all([
+          customerAPI.getCustomerById(customerId),
+          customerAPI.getSummary(customerId)
+        ]);
 
-        if (data.success) {
-          setCustomer(data.data.customer);
-        } else {
-          setError(data.message || 'Failed to load customer profile');
+        if (profileRes.data.success) {
+          setCustomer(profileRes.data.data.customer);
         }
+
+        if (summaryRes.data.success) {
+          setSummary(summaryRes.data.data);
+        }
+
       } catch (err) {
-        console.error('Error fetching customer profile:', err);
-        if (err.response) {
-          setError(err.response.data.message || `HTTP ${err.response.status}: ${err.response.statusText}`);
-        } else if (err.request) {
-          setError('Failed to connect to server. Please make sure the API Gateway is running on port 5000.');
-        } else {
-          setError(`Network error: ${err.message}`);
-        }
+        console.error('Data fetch error:', err);
+        setError(err.response?.data?.message || 'Failed to connect to the API Gateway at port 5000.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCustomerProfile();
+    fetchAllData();
   }, [navigate, customerId]);
 
-
-
   const handleBack = () => {
-    const userData = JSON.parse(localStorage.getItem('user'));
-    if (userData.role === 'customer') {
-      navigate('/customer-dashboard');
-    } else {
-      navigate('/seller-dashboard');
-    }
+    navigate('/customer-dashboard');
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">❌</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button
-            onClick={handleBack}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition duration-300"
-          >
-            Go Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!customer) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">👤</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Profile Not Found</h2>
-          <p className="text-gray-600 mb-6">The requested customer profile could not be found.</p>
-          <button
-            onClick={handleBack}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition duration-300"
-          >
-            Go Back
-          </button>
-        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-800">
-                Book<span className="text-indigo-600">Nest</span>
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleBack}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* Navbar section */}
+      <nav className="bg-white shadow-sm px-4 py-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800">
+          Book<span className="text-indigo-600">Nest</span>
+        </h1>
+        <button onClick={handleBack} className="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
+          Back to Dashboard
+        </button>
       </nav>
 
-      <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="text-center mb-8">
-            <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-4xl">👤</span>
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900">Customer Profile</h2>
-            <p className="text-gray-600 mt-2">View and manage customer information</p>
+      <div className="max-w-4xl mx-auto py-10 px-4">
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">👤</div>
+          <h2 className="text-3xl font-bold text-gray-900">Customer Profile</h2>
+          <p className="text-gray-600">Verified activity across services</p>
+        </div>
+
+        {/* Activity Summary Section (Shows inter-service data) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="bg-indigo-600 p-6 rounded-xl text-white shadow-lg">
+            <span className="text-indigo-100 text-xs font-bold uppercase">Total Orders</span>
+            <div className="text-4xl font-extrabold mt-2">{summary.orderCount}</div>
           </div>
+          <div className="bg-emerald-600 p-6 rounded-xl text-white shadow-lg">
+            <span className="text-emerald-100 text-xs font-bold uppercase">Feedbacks Submitted</span>
+            <div className="text-4xl font-extrabold mt-2">{summary.feedbackCount}</div>
+          </div>
+        </div>
 
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Profile Details</h3>
+        {/* Profile Details */}
+        <div className="bg-white shadow rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-gray-800 border-b pb-4 mb-6">Account Details</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <section>
+              <label className="text-xs font-bold text-gray-400 uppercase">Full Name</label>
+              <p className="text-gray-900 font-medium mb-4">{customer?.name}</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Personal Information</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Full Name</label>
-                      <p className="mt-1 text-sm text-gray-900">{customer.name}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Email Address</label>
-                      <p className="mt-1 text-sm text-gray-900">{customer.email}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">User ID</label>
-                      <p className="mt-1 text-sm text-gray-900 font-mono">{customer.userId}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Account Information</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Role</label>
-                      <p className="mt-1 text-sm text-gray-900 capitalize">{customer.role}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Member Since</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {new Date(customer.createDate).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Last Updated</label>
-                      <p className="mt-1 text-sm text-gray-900">
-                        {customer.updatedAt
-                          ? new Date(customer.updatedAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })
-                          : 'Never updated'
-                        }
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {customer.phone && (
-                <div className="mt-6 border border-gray-200 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">Contact Information</h4>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <p className="mt-1 text-sm text-gray-900">{customer.phone}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button
-                    onClick={handleBack}
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition duration-300 text-center"
-                  >
-                    Back to Dashboard
-                  </button>
-                </div>
-              </div>
-            </div>
+              <label className="text-xs font-bold text-gray-400 uppercase">Email</label>
+              <p className="text-gray-900 font-medium">{customer?.email}</p>
+            </section>
+            <section>
+              <label className="text-xs font-bold text-gray-400 uppercase">Member Since</label>
+              <p className="text-gray-900 font-medium mb-4">
+                {new Date(customer?.createDate).toLocaleDateString()}
+              </p>
+              
+              <label className="text-xs font-bold text-gray-400 uppercase">Account Status</label>
+              <p className="text-emerald-600 font-bold uppercase text-sm">Active</p>
+            </section>
           </div>
         </div>
       </div>

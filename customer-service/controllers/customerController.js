@@ -1,4 +1,5 @@
 import Customer from '../models/Customer.js';
+import axios from 'axios';
 
 // Create customer profile (called by auth service)
 export const createCustomerProfile = async (req, res) => {
@@ -208,7 +209,6 @@ export const deleteCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
 
-    // Only sellers can delete customers, or users can delete their own account
     if (req.user && req.user.role !== 'seller' && req.user.userId !== customerId) {
       return res.status(403).json({
         success: false,
@@ -236,5 +236,39 @@ export const deleteCustomer = async (req, res) => {
       message: 'Internal server error',
       error: error.message
     });
+  }
+};
+
+export const getCustomerSummary = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const token = req.headers.authorization;
+
+    const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
+    const FEEDBACK_SERVICE_URL = process.env.FEEDBACK_SERVICE_URL;
+
+    const [ordersRes, feedbackRes] = await Promise.all([
+      axios.get(`${ORDER_SERVICE_URL}/api/orders/customer/${customerId}`, {
+        headers: { Authorization: token }
+      }).catch(() => ({ data: { count: 0 } })),
+      
+      axios.get(`${FEEDBACK_SERVICE_URL}/api/feedback?customerId=${customerId}`, {
+        headers: { Authorization: token }
+      }).catch(() => ({ data: { data: { feedback: [] } } }))
+    ]);
+
+    const orderCount = ordersRes.data?.count || 0;
+    const feedbackCount = feedbackRes.data?.data?.feedback?.length || 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        customerId,
+        orderCount,
+        feedbackCount
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
