@@ -10,11 +10,17 @@ const generateToken = (userId, role) => {
   });
 };
 
+// Normalize the customer service base URL (removes trailing slash and /api/customers if present)
+const normalizeCustomerServiceBase = () => {
+  let base = (process.env.CUSTOMER_SERVICE_URL || '').trim().replace(/\/$/, '');
+  base = base.replace(/\/api\/customers\/?$/i, '');
+  return base;
+};
+
 // Create customer profile in customer service
 const createCustomerProfile = async (user) => {
   try {
-    const customerServiceUrl = process.env.CUSTOMER_SERVICE_URL;
-    
+    const customerServiceBase = normalizeCustomerServiceBase();
     const customerData = {
       userId: user.userId,
       name: user.name,
@@ -23,15 +29,17 @@ const createCustomerProfile = async (user) => {
       createDate: user.createDate
     };
 
-    console.log('Creating customer profile at:', `${customerServiceUrl}/api/customers/`);
+    const url = `${customerServiceBase}/api/customers/`;
+    console.log('Creating customer profile at:', url);
+    console.log('Customer data:', customerData);
 
-    const response = await axios.post(`${customerServiceUrl}/api/customers/`, customerData, {
+    const response = await axios.post(url, customerData, {
       timeout: 5000,
       headers: {
         'Content-Type': 'application/json'
       }
     });
-    
+    console.log('Customer profile creation response:', response.data);
   } catch (error) {
     console.error('Error creating customer profile:', error.message);
     if (error.response) {
