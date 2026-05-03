@@ -1,8 +1,7 @@
 import Order from '../models/Order.js';
 import axios from 'axios';
 
-// Service URLs - These should be configured in environment variables
-const CUSTOMER_SERVICE_URL = process.env.CUSTOMER_SERVICE_UR;
+const CUSTOMER_SERVICE_URL = process.env.CUSTOMER_SERVICE_URL;
 const SELLER_SERVICE_URL = process.env.SELLER_SERVICE_URL;
 
 const fetchCustomerById = async (customerId) => {

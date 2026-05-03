@@ -242,19 +242,26 @@ export const deleteCustomer = async (req, res) => {
 export const getCustomerSummary = async (req, res) => {
   try {
     const { customerId } = req.params;
-    const token = req.headers.authorization;
+    const authHeader = req.headers.authorization; 
 
     const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
     const FEEDBACK_SERVICE_URL = process.env.FEEDBACK_SERVICE_URL;
 
+    // Fetch data concurrently
     const [ordersRes, feedbackRes] = await Promise.all([
       axios.get(`${ORDER_SERVICE_URL}/api/orders/customer/${customerId}`, {
-        headers: { Authorization: token }
-      }).catch(() => ({ data: { count: 0 } })),
+        headers: { Authorization: authHeader }
+      }).catch(err => {
+        console.error("Order Service Error:", err.message);
+        return { data: { count: 0 } };
+      }),
       
       axios.get(`${FEEDBACK_SERVICE_URL}/api/feedback?customerId=${customerId}`, {
-        headers: { Authorization: token }
-      }).catch(() => ({ data: { data: { feedback: [] } } }))
+        headers: { Authorization: authHeader }
+      }).catch(err => {
+        console.error("Feedback Service Error:", err.message);
+        return { data: { data: { feedback: [] } } };
+      })
     ]);
 
     const orderCount = ordersRes.data?.count || 0;
@@ -269,6 +276,7 @@ export const getCustomerSummary = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Summary Orchestrator Error:", error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 };
