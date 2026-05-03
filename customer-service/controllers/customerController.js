@@ -144,7 +144,6 @@ export const updateCustomer = async (req, res) => {
     const { customerId } = req.params;
     const updateData = req.body;
 
-    // If authenticated context is present, only allow profile owner updates.
     if (req.user && req.user.userId !== customerId) {
       return res.status(403).json({
         success: false,
@@ -244,8 +243,14 @@ export const getCustomerSummary = async (req, res) => {
     const { customerId } = req.params;
     const authHeader = req.headers.authorization; 
 
+    console.log("[getCustomerSummary] Called for customerId:", customerId);
+    console.log("[getCustomerSummary] Auth header:", authHeader);
+
     const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
     const FEEDBACK_SERVICE_URL = process.env.FEEDBACK_SERVICE_URL;
+
+    console.log("[getCustomerSummary] ORDER_SERVICE_URL:", ORDER_SERVICE_URL);
+    console.log("[getCustomerSummary] FEEDBACK_SERVICE_URL:", FEEDBACK_SERVICE_URL);
 
     const [ordersRes, feedbackRes] = await Promise.all([
       axios.get(`${ORDER_SERVICE_URL}/api/orders/customer/${customerId}`, {
@@ -263,8 +268,13 @@ export const getCustomerSummary = async (req, res) => {
       })
     ]);
 
+    console.log("[getCustomerSummary] Order service raw response:", ordersRes.data);
+    console.log("[getCustomerSummary] Feedback service raw response:", feedbackRes.data);
+
     const orderCount = ordersRes.data?.count || 0;
     const feedbackCount = feedbackRes.data?.data?.feedback?.length || 0;
+
+    console.log(`[getCustomerSummary] Customer ${customerId} - Orders: ${orderCount}, Feedbacks: ${feedbackCount}`);
 
     res.status(200).json({
       success: true,
