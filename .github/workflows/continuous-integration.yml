@@ -37,8 +37,9 @@ jobs:
         working-directory: ./${{ matrix.service }}
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v7
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        uses: SonarSource/sonarcloud-github-action@master
         with:
-          projectBaseDir: ./${{ matrix.service }}
+          projectBaseDir: user-service
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
