@@ -50,7 +50,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <Link to="/" className="text-3xl font-bold text-gray-800">
-            Book<span className="text-indigo-600">Nest</span>
+            Book<span className="text-indigo-600">Nest!</span>
           </Link>
           <p className="text-gray-600 mt-2">Sign in to your account..</p>
         </div>
