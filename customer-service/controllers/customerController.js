@@ -248,14 +248,13 @@ export const getCustomerSummary = async (req, res) => {
 
     const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL;
     const FEEDBACK_SERVICE_URL = process.env.FEEDBACK_SERVICE_URL;
+    
 
     console.log("[getCustomerSummary] ORDER_SERVICE_URL:", ORDER_SERVICE_URL);
     console.log("[getCustomerSummary] FEEDBACK_SERVICE_URL:", FEEDBACK_SERVICE_URL);
 
     const [ordersRes, feedbackRes] = await Promise.all([
-      axios.get(`${ORDER_SERVICE_URL}/api/orders/customer/${customerId}`, {
-        headers: { Authorization: authHeader }
-      }).catch((err) => {
+      axios.get(`${ORDER_SERVICE_URL}/api/orders/customer/${customerId}`).catch((err) => {
         console.error("Order Service unreachable:", err.message);
         return { data: { count: 0 } }; 
       }),
