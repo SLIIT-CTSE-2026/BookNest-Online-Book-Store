@@ -35,9 +35,9 @@ jobs:
       - name: Verify Build
         run: npm run build --if-present
         working-directory: ./${{ matrix.service }}
-
+        
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@e83f8373330691526a09423791090623347b2c01
+        uses: SonarSource/sonarcloud-github-action@02ef91109b2d589e757aefad330f576c653097e8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

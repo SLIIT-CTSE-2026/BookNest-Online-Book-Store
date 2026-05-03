@@ -52,7 +52,7 @@ export default function LoginPage() {
           <Link to="/" className="text-3xl font-bold text-gray-800">
             Book<span className="text-indigo-600">Nest</span>
           </Link>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+          <p className="text-gray-600 mt-2">Sign in to your account..</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
