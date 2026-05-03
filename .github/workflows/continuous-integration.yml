@@ -37,9 +37,6 @@ jobs:
         working-directory: ./${{ matrix.service }}
 
       - name: SonarCloud Scan
-        # TODO: Pin this action to a full commit SHA for security
-        # To find the SHA: Visit https://github.com/SonarSource/sonarqube-scan-action/releases
-        # and copy the commit SHA from the v7 release tag
         uses: SonarSource/sonarqube-scan-action@v7
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
