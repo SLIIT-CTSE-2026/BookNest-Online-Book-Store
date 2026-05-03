@@ -37,7 +37,7 @@ jobs:
         working-directory: ./${{ matrix.service }}
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v3
+        uses: SonarSource/sonarcloud-github-action@e83f8373330691526a09423791090623347b2c01
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
