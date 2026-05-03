@@ -90,7 +90,7 @@ export default function SellerProfile() {
             onClick={handleBack}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition duration-300"
           >
-            Go Back
+            Go to Back
           </button>
         </div>
       </div>
