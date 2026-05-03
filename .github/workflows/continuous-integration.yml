@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@f995f2e6039f9282baf409b14c0d41851b35f570
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@60edb5dd545a775178fba6a0fab3ce0a49617662
         with:
           node-version: 22
 
@@ -37,7 +37,7 @@ jobs:
         working-directory: ./${{ matrix.service }}
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v7
+        uses: SonarSource/sonarqube-scan-action@95299e2e0872c51fa247b2143d065d88c52c9a9a
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
