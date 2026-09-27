@@ -13,6 +13,8 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT;
 
+app.disable('x-powered-by');
+
 // Security middleware
 app.use(helmet()); 
 

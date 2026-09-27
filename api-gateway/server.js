@@ -8,6 +8,8 @@ import { authenticateToken, authorizeRole } from './middleware/auth.js';
 dotenv.config();
 const app = express();
 
+app.disable('x-powered-by');
+
 app.use(helmet.contentSecurityPolicy({
   directives: {
     defaultSrc: ["'self'"],
