@@ -47,6 +47,49 @@ const canAccessOrder = (req, order) => {
   return Boolean(userId && order.customerId === userId);
 };
 
+const fetchCustomerById = async (customerId) => {
+  const trimmedBase = (CUSTOMER_SERVICE_URL || '').replace(/\/$/, '');
+  const candidates = [
+    `${trimmedBase}/${customerId}`,
+    `${trimmedBase}/api/customers/${customerId}`,
+    `http://localhost:5002/api/customers/${customerId}`
+  ];
+
+  let lastError;
+  for (const url of candidates) {
+    try {
+      const response = await axios.get(url);
+      const customer = response.data?.data?.customer || response.data?.data;
+      if (customer) {
+        return customer;
+      }
+    } catch (error) {
+      lastError = error;
+      if (error.response?.status !== 404) {
+        throw error;
+      }
+    }
+  }
+
+  const notFoundError = new Error('Customer not found in customer service');
+  notFoundError.status = 404;
+  if (lastError) {
+    notFoundError.cause = lastError;
+  }
+  throw notFoundError;
+};
+
+const canAccessOrder = (req, order) => {
+  const role = req.user?.role;
+  const userId = req.user?.userId || req.user?.id;
+
+  if (role === 'seller' || role === 'admin') {
+    return true;
+  }
+
+  return Boolean(userId && order.customerId === userId);
+};
+
 /**
  * Get orders
  * - customers: only their own orders
@@ -209,8 +252,6 @@ export const updateOrderStatus = async (req, res) => {
         message: 'Order not found'
       });
     }
-
-    console.log('Order found:', order._id, 'with orderId:', order.orderId);
 
     if (!canAccessOrder(req, order)) {
       return res.status(403).json({
